@@ -62,7 +62,7 @@ def load_corpus(filename: str) -> List[Tuple[str, str]]:
     
     return qa_pairs
 
-def find_best_match(user_input: str, qa_pairs: List[Tuple[str, str]], threshold: float = 0.3) -> str:
+def find_best_match(user_input: str, qa_pairs: List[Tuple[str, str]]) -> str:
     """
     Find the best matching question using Jaccard similarity.
     Returns the answer if similarity >= threshold, otherwise a default response.
@@ -76,11 +76,7 @@ def find_best_match(user_input: str, qa_pairs: List[Tuple[str, str]], threshold:
             best_similarity = similarity
             best_answer = answer
     
-    # Only return answer if similarity meets threshold
-    if best_similarity >= threshold:
-        return best_answer
-    else:
-        return "I'm sorry, I don't understand. Could you rephrase that?"
+    return best_answer
 
 def chatbot():
     """
@@ -130,7 +126,7 @@ def generate_response(user_input, model="1.5"):
         return
     
     # Find and return best match
-    response = find_best_match(user_input, qa_pairs, model=model)
+    response = find_best_match(user_input, qa_pairs)
     return response
 
 
