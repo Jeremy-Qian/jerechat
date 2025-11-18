@@ -118,20 +118,20 @@ def chatbot():
             print(f"JereChat: An error occurred: {e}")
 
 
-    def generate_response(user_input, model="1.5"):
-        """
-        Generate response using loaded corpus.
-        """
-        
-        # Load corpus
-        qa_pairs = load_corpus('corpus.txt')
-        if not qa_pairs:
-            print("JereChat: No knowledge base loaded. Exiting.")
-            return
-        
-        # Find and return best match
-        response = find_best_match(user_input, qa_pairs, model=model)
-        return response
+def generate_response(user_input, model="1.5"):
+    """
+    Generate response using loaded corpus.
+    """
+    
+    # Load corpus
+    qa_pairs = load_corpus('corpus.txt')
+    if not qa_pairs:
+        print("JereChat: No knowledge base loaded. Exiting.")
+        return
+    
+    # Find and return best match
+    response = find_best_match(user_input, qa_pairs, model=model)
+    return response
 
 
 if __name__ == "__main__":
