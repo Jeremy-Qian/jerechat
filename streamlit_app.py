@@ -29,7 +29,7 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
 
     # Generate a response using the JereChat model.
-    stream = jc.generate_response(prompt, model)
+    stream = generate_response(prompt, model)
 
     # Stream the response to the chat using `st.write_stream`, then store it in 
     with st.chat_message("assistant"):
