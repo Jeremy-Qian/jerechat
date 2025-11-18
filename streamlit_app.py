@@ -1,6 +1,10 @@
 import streamlit as st
 import jerechat as jc
 
+def stream_text(text):
+    for char in text:
+        yield char
+
 # Show title and description.
 st.title("💬 Chatbot")
 st.write(
@@ -29,9 +33,9 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
 
     # Generate a response using the JereChat model.
-    stream = jc.generate_response(prompt, model)
+    text = jc.generate_response(prompt, model)
 
     # Stream the response to the chat using `st.write_stream`, then store it in 
     with st.chat_message("assistant"):
-        response = st.write_stream(stream)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.write_stream(stream_text(text))
+    st.session_state.messages.append({"role": "assistant", "content": text})
