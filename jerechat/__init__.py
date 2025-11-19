@@ -120,7 +120,7 @@ def generate_response(user_input, model="1.5"):
     """
     
     # Load corpus
-    qa_pairs = load_corpus('corpus.txt')
+    qa_pairs = load_corpus('./corpus.txt')
     if not qa_pairs:
         print("JereChat: No knowledge base loaded. Exiting.")
         return
