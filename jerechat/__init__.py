@@ -1,3 +1,4 @@
+import os
 import re
 from typing import List, Tuple
 
@@ -119,11 +120,12 @@ def generate_response(user_input, model="1.5"):
     Generate response using loaded corpus.
     """
     
-    # Load corpus
-    qa_pairs = load_corpus('./corpus.txt')
+    # Load corpus from the correct path
+    corpus_path = os.path.join(os.path.dirname(__file__), 'corpus.txt')
+    qa_pairs = load_corpus(corpus_path)
     if not qa_pairs:
         print("JereChat: No knowledge base loaded. Exiting.")
-        return
+        return "I'm sorry, I don't have any knowledge base loaded to help you."
     
     # Find and return best match
     response = find_best_match(user_input, qa_pairs)
