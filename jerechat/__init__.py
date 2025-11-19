@@ -85,8 +85,9 @@ def chatbot():
     """
     print("JereChat: Hello! I'm a simple chatbot. Type 'quit' to exit.")
     
-    # Load corpus
-    qa_pairs = load_corpus('corpus.txt')
+    # Load corpus from the correct path
+    corpus_path = os.path.join(os.path.dirname(__file__), 'corpus.txt')
+    qa_pairs = load_corpus(corpus_path)
     if not qa_pairs:
         print("JereChat: No knowledge base loaded. Exiting.")
         return
