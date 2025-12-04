@@ -21,38 +21,32 @@ def jaccard_similarity(text1: str, text2: str) -> float:
         return 0.0
     return len(intersection) / len(union)
 
-def load_corpus(filename: str) -> List[Tuple[str, str]]:
+def load_corpus(filename: str) -> List[Tuple[List[str], str]]:
     """
     Load Q&A pairs from corpus file.
-    Format: Q on one line, A on next line, repeated.
+    Format: Questions start with single '-', answers with '--'.
+    Multiple questions can map to the same answer.
     """
     qa_pairs = []
+    current_questions = []
+    current_answer = ""
+    
     try:
         with open(filename, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-        
-        i = 0
-        while i < len(lines):
-            # Skip empty lines
-            if not lines[i].strip():
-                i += 1
-                continue
-            
-            # Get question (current non-empty line)
-            question = lines[i].strip()
-            i += 1
-            
-            # Find next non-empty line for answer
-            while i < len(lines) and not lines[i].strip():
-                i += 1
-            
-            if i < len(lines):
-                answer = lines[i].strip()
-                qa_pairs.append((question, answer))
-                i += 1
-            else:
-                # Question without answer
-                break
+            for line in file:
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                if line.startswith('--'):
+                    # This is an answer line
+                    if current_questions:  # If we have questions waiting for an answer
+                        current_answer = line[2:].strip()
+                        qa_pairs.append((current_questions.copy(), current_answer))
+                        current_questions = []
+                elif line.startswith('-'):
+                    # This is a question line
+                    current_questions.append(line[1:].strip())
                 
     except FileNotFoundError:
         print(f"Error: Corpus file '{filename}' not found.")
@@ -63,21 +57,38 @@ def load_corpus(filename: str) -> List[Tuple[str, str]]:
     
     return qa_pairs
 
-def find_best_match(user_input: str, qa_pairs: List[Tuple[str, str]]) -> str:
+def find_best_match(user_input: str, qa_pairs: List[Tuple[List[str], str]]) -> str:
     """
     Find the best matching question using Jaccard similarity.
-    Returns the answer if similarity >= threshold, otherwise a default response.
+    Combines similarity scores for all questions that map to the same answer.
+    Returns the answer with the highest combined similarity score.
     """
-    best_similarity = 0.0
-    best_answer = "I'm sorry, I don't understand. Could you rephrase that?"
+    answer_scores = {}
     
-    for question, answer in qa_pairs:
-        similarity = jaccard_similarity(user_input, question)
-        if similarity > best_similarity:
-            best_similarity = similarity
-            best_answer = answer
+    for questions, answer in qa_pairs:
+        # Calculate max similarity for all questions mapping to this answer
+        max_similarity = max(
+            jaccard_similarity(user_input, q) 
+            for q in questions
+        )
+        
+        # Update the score for this answer
+        if answer in answer_scores:
+            answer_scores[answer] = max(answer_scores[answer], max_similarity)
+        else:
+            answer_scores[answer] = max_similarity
     
-    return best_answer
+    if not answer_scores:
+        return "I'm sorry, I don't understand. Could you rephrase that?"
+    
+    # Get answer with highest score
+    best_answer = max(answer_scores.items(), key=lambda x: x[1])
+    
+    # Only return the answer if similarity is above a threshold
+    if best_answer[1] > 0.1:  # Adjust threshold as needed
+        return best_answer[0]
+    else:
+        return "I'm not sure I understand. Could you rephrase your question?"
 
 def chatbot():
     """
@@ -116,21 +127,25 @@ def chatbot():
             print(f"JereChat: An error occurred: {e}")
 
 
-def generate_response(user_input, model="1.5"):
+def generate_response(user_input: str, model: str = "1.5") -> str:
     """
     Generate response using loaded corpus.
-    """
     
+    Args:
+        user_input: The user's input text
+        model: Model version (not currently used, kept for compatibility)
+        
+    Returns:
+        str: The chatbot's response
+    """
     # Load corpus from the correct path
     corpus_path = os.path.join(os.path.dirname(__file__), 'corpus.txt')
     qa_pairs = load_corpus(corpus_path)
     if not qa_pairs:
-        print("JereChat: No knowledge base loaded. Exiting.")
         return "I'm sorry, I don't have any knowledge base loaded to help you."
     
     # Find and return best match
-    response = find_best_match(user_input, qa_pairs)
-    return response
+    return find_best_match(user_input, qa_pairs)
 
 
 if __name__ == "__main__":

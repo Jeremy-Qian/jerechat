@@ -54,32 +54,22 @@
 
 -What's your favorite color
 -Do you like colors
---I'm colorblind and also not very bright, so I don't have a favorite color.
+--I like #00BBFF, only because Jeremy likes it.
 
 -Tell me a joke
 -Say something funny
 --Why did the chatbot cross the road? I don't know, I'm not good at jokes.
 
--How old are you
--What's your age
---I was created recently, but I'm not smart enough to keep track of time.
+-knock knock
+--Say 'play knock knock' to start.
 
--What do you eat
--Do you eat
---I don't eat, I'm just a simple program. I don't even know what food is.
+-play knock knock
+--Knock Knock!
 
--Can you sing
--Sing me a song
---La la la... oops, sorry, I'm not very good at this.
+-who's there
+-who is there
+--JereChat.
 
--Are you smart
--Are you intelligent
---Nope, I'm quite stupid actually. That's my whole thing.
+-JereChat who
+--JereChat is me.
 
--What's the meaning of life
--Why do we exist
---I can barely understand simple questions, let alone deep philosophical ones!
-
--Do you dream
--Do you sleep
---I don't sleep or dream. I just sit here being not very smart all the time.
