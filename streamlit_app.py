@@ -4,8 +4,60 @@ import textwrap
 from collections import namedtuple
 import time
 import jerechat as jc
+from streamlit.runtime.scriptrunner import RerunException
+from streamlit.runtime.scriptrunner import StopException
 
-st.set_page_config(page_title="Streamlit AI assistant", page_icon="✨")
+st.set_page_config(
+    page_title="Streamlit AI assistant", 
+    page_icon="✨",
+    initial_sidebar_state="collapsed"
+)
+
+def check_invitation_code():
+    """Check if user has entered a valid invitation code."""
+    if 'invitation_verified' not in st.session_state:
+        st.session_state.invitation_verified = False
+    
+    if not st.session_state.invitation_verified:
+        # Get valid codes from secrets
+        valid_codes = st.secrets.get("invitation_codes", [])
+        if not valid_codes:
+            st.error("No valid invitation codes found in secrets!")
+            st.stop()
+            
+        # Create a non-closable popup
+        st.markdown("""
+            <style>
+                .stAlert {
+                    z-index: 1000;
+                }
+                .stDialog {
+                    z-index: 1001;
+                }
+                .stTextInput {
+                    z-index: 1002;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # Create a form for the invitation code
+        with st.form("invitation_form"):
+            st.markdown("## 🔑 Enter Invitation Code")
+            code = st.text_input("Please enter your 6-digit invitation code:", "", type="password")
+            submitted = st.form_submit_button("Submit")
+            
+            if submitted:
+                if code in valid_codes:
+                    st.session_state.invitation_verified = True
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid invitation code. Please try again.")
+        
+        # Prevent the rest of the app from running
+        st.stop()
+
+# Check invitation code before showing the app
+check_invitation_code()
 
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
