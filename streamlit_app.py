@@ -63,7 +63,7 @@ check_invitation_code()
 # Sidebar with 'My Code' section
 with st.sidebar:
     st.markdown("## My Code")
-    st.markdown("""#### Great! You have an invitation code!""")
+    st.markdown("""####Great! You have an invitation code!""")
 
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
@@ -114,28 +114,17 @@ def build_question_prompt(question):
 def get_response(prompt):
     """Generate response using jerechat API"""
     try:
-        if DEBUG_MODE:
-            st.write(f"DEBUG: Calling jc.generate_response with prompt: {prompt[:50]}...")
-        
         response_text = jc.generate_response(prompt, "1.5")
-        
-        if DEBUG_MODE:
-            st.write(f"DEBUG: Got response: {response_text[:50]}...")
-        
         # Yield chunks of ~20 characters to simulate line-by-line output
         chunk_size = 20
         for i in range(0, len(response_text), chunk_size):
             yield response_text[i:i + chunk_size]
-            time.sleep(0.05)  # Reduced sleep time
+            time.sleep(0.1)
     except Exception as e:
-        if DEBUG_MODE:
-            st.write(f"DEBUG: Exception in get_response: {str(e)}")
-        st.error(f"Error generating response: {str(e)}")
-        error_response = f"Sorry, I encountered an error: {str(e)}. Please try again."
-        chunk_size = 20
+        error_response = f"Error: {str(e)}. Please rephrase."
         for i in range(0, len(error_response), chunk_size):
             yield error_response[i:i + chunk_size]
-            time.sleep(0.05)  # Reduced sleep time
+            time.sleep(0.1)
 
 def send_telemetry(**kwargs):
     """Mock telemetry function"""
@@ -161,7 +150,7 @@ def show_feedback_controls(message_index):
             ""  # Add some space
             
             if st.form_submit_button("Send feedback"):
-                st.toast("Thank you for your feedback!")
+                st.success("Thank you for your feedback! (This is a demo)")
 
 @st.dialog("Legal disclaimer")
 def show_disclaimer_dialog():
@@ -265,62 +254,42 @@ for i, message in enumerate(st.session_state.messages):
         if message["role"] == "assistant":
             show_feedback_controls(i)
 
-if user_message and not st.session_state.get("generating", False):
-    # When the user posts a message, store it and set generating flag
-    st.session_state.pending_message = user_message
-    st.session_state.generating = True
-    st.rerun()
-
-if st.session_state.get("generating", False) and "pending_message" in st.session_state:
-    try:
-        # Process the pending message
-        user_message = st.session_state.pending_message
-        del st.session_state.pending_message
-        
-        # Streamlit's Markdown engine interprets "$" as LaTeX code
-        user_message = user_message.replace("$", r"\$")
-        
-        # Display message as a speech bubble.
-        with st.chat_message("user"):
-            st.text(user_message)
-        
-        # Display assistant response as a speech bubble.
-        with st.chat_message("assistant"):
-            # Build a detailed prompt.
-            if DEBUG_MODE:
-                with st.status("Computing prompt...") as status:
-                    full_prompt = build_question_prompt(user_message)
-                    st.code(full_prompt)
-                    status.update(label="Prompt computed")
-            else:
+if user_message:
+    # When the user posts a message...
+    
+    # Streamlit's Markdown engine interprets "$" as LaTeX code
+    user_message = user_message.replace("$", r"\$")
+    
+    # Display message as a speech bubble.
+    with st.chat_message("user"):
+        st.text(user_message)
+    
+    # Display assistant response as a speech bubble.
+    with st.chat_message("assistant"):
+        # Build a detailed prompt.
+        if DEBUG_MODE:
+            with st.status("Computing prompt...") as status:
                 full_prompt = build_question_prompt(user_message)
-            
-            # Send prompt to echo function.
-            with st.spinner("Thinking..."):
-                time.sleep(1)
-                response_gen = get_response(full_prompt)
-            
-            # Put everything after the spinners in a container to fix the
-            # ghost message bug.
-            with st.container():
-                # Stream the response.
-                response = st.write_stream(response_gen)
-                
-                # Add messages to chat history.
-                st.session_state.messages.append({"role": "user", "content": user_message})
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                
-                # Other stuff.
-                show_feedback_controls(len(st.session_state.messages) - 1)
-                send_telemetry(question=user_message, response=response)
+                st.code(full_prompt)
+                status.update(label="Prompt computed")
+        else:
+            full_prompt = build_question_prompt(user_message)
         
-    except Exception as e:
-        st.error(f"An error occurred while processing your message: {str(e)}")
-        # Still add the user message to history so the conversation continues
-        if "user_message" in locals():
+        # Send prompt to echo function.
+        with st.spinner("Thinking..."):
+            time.sleep(1)
+            response_gen = get_response(full_prompt)
+        
+        # Put everything after the spinners in a container to fix the
+        # ghost message bug.
+        with st.container():
+            # Stream the response.
+            response = st.write_stream(response_gen)
+            
+            # Add messages to chat history.
             st.session_state.messages.append({"role": "user", "content": user_message})
-            st.session_state.messages.append({"role": "assistant", "content": f"Sorry, I encountered an error: {str(e)}"})
-    finally:
-        # Always reset the generating flag
-        st.session_state.generating = False
-        st.rerun()
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            
+            # Other stuff.
+            show_feedback_controls(len(st.session_state.messages) - 1)
+            send_telemetry(question=user_message, response=response)
