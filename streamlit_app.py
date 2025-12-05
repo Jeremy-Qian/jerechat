@@ -59,10 +59,19 @@ def check_invitation_code():
 # Check invitation code before showing the app
 check_invitation_code()
 
+# Initialize session state flags
+if "generating" not in st.session_state:
+    st.session_state.generating = False
+
+# -----------------------------------------------------------------------------
+# Sidebar with 'My Code' section
+with st.sidebar:
+    st.markdown("## My Code")
+    st.markdown("""#### Great! You have an invitation code!""")
+
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
 HISTORY_LENGTH = 5
-MIN_TIME_BETWEEN_REQUESTS = datetime.timedelta(seconds=3)
 DEBUG_MODE = st.query_params.get("debug", "false").lower() == "true"
 
 CORTEX_URL = (
@@ -102,31 +111,9 @@ TaskResult = namedtuple("TaskResult", ["name", "result"])
 # -----------------------------------------------------------------------------
 # Simplified functions (without AI/Snowflake dependencies)
 
-def build_prompt(**kwargs):
-    """Simplified prompt builder - just returns the question"""
-    if "question" in kwargs:
-        return kwargs["question"]
-    return ""
-
-def history_to_text(chat_history):
-    """Converts chat history into a string."""
-    return "\n".join(f"[{h['role']}]: {h['content']}" for h in chat_history)
-
 def build_question_prompt(question):
     """Direct question prompt - no extra context"""
     return question
-
-def generate_chat_summary(messages):
-    """Mock function - returns placeholder text"""
-    return "Summary of previous conversation"
-
-def search_relevant_pages(query):
-    """Mock function - returns placeholder text"""
-    return f"Relevant documentation for: {query}"
-
-def search_relevant_docstrings(query):
-    """Mock function - returns placeholder text"""
-    return f"Relevant docstrings for: {query}"
 
 def get_response(prompt):
     """Generate response using jerechat API"""
@@ -219,7 +206,7 @@ if not user_first_interaction and not has_message_history:
     st.session_state.messages = []
     
     with st.container():
-        st.chat_input("Ask a question...", key="initial_question")
+        st.chat_input("Ask a question...", key="initial_question", disabled=st.session_state.generating)
         
         selected_suggestion = st.pills(
             label="Examples",
@@ -237,7 +224,7 @@ if not user_first_interaction and not has_message_history:
     st.stop()
 
 # Show chat input at the bottom when a question has been asked.
-user_message = st.chat_input("Ask a follow-up...")
+user_message = st.chat_input("Ask a follow-up...", disabled=st.session_state.generating)
 
 if not user_message:
     if user_just_asked_initial_question:
@@ -257,8 +244,8 @@ with title_row:
         on_click=clear_conversation,
     )
 
-if "prev_question_timestamp" not in st.session_state:
-    st.session_state.prev_question_timestamp = datetime.datetime.fromtimestamp(0)
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 # Display chat messages from history as speech bubbles.
 for i, message in enumerate(st.session_state.messages):
@@ -273,6 +260,7 @@ for i, message in enumerate(st.session_state.messages):
 
 if user_message:
     # When the user posts a message...
+    st.session_state.generating = True
     
     # Streamlit's Markdown engine interprets "$" as LaTeX code
     user_message = user_message.replace("$", r"\$")
@@ -283,15 +271,6 @@ if user_message:
     
     # Display assistant response as a speech bubble.
     with st.chat_message("assistant"):
-        with st.spinner("Waiting..."):
-            # Rate-limit the input if needed.
-            question_timestamp = datetime.datetime.now()
-            time_diff = question_timestamp - st.session_state.prev_question_timestamp
-            st.session_state.prev_question_timestamp = question_timestamp
-            
-            if time_diff < MIN_TIME_BETWEEN_REQUESTS:
-                time.sleep(time_diff.seconds + time_diff.microseconds * 0.001)
-        
         # Build a detailed prompt.
         if DEBUG_MODE:
             with st.status("Computing prompt...") as status:
@@ -299,11 +278,11 @@ if user_message:
                 st.code(full_prompt)
                 status.update(label="Prompt computed")
         else:
-            with st.spinner("Researching..."):
-                full_prompt = build_question_prompt(user_message)
+            full_prompt = build_question_prompt(user_message)
         
         # Send prompt to echo function.
         with st.spinner("Thinking..."):
+            time.sleep(1)
             response_gen = get_response(full_prompt)
         
         # Put everything after the spinners in a container to fix the
@@ -319,3 +298,5 @@ if user_message:
             # Other stuff.
             show_feedback_controls(len(st.session_state.messages) - 1)
             send_telemetry(question=user_message, response=response)
+    
+    st.session_state.generating = False
