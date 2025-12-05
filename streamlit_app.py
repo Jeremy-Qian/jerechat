@@ -237,6 +237,7 @@ with title_row:
         st.session_state.messages = []
         st.session_state.initial_question = None
         st.session_state.selected_suggestion = None
+        st.session_state.generating = False
     
     st.button(
         "Restart",
@@ -262,41 +263,43 @@ if user_message:
     # When the user posts a message...
     st.session_state.generating = True
     
-    # Streamlit's Markdown engine interprets "$" as LaTeX code
-    user_message = user_message.replace("$", r"\$")
-    
-    # Display message as a speech bubble.
-    with st.chat_message("user"):
-        st.text(user_message)
-    
-    # Display assistant response as a speech bubble.
-    with st.chat_message("assistant"):
-        # Build a detailed prompt.
-        if DEBUG_MODE:
-            with st.status("Computing prompt...") as status:
+    try:
+        # Streamlit's Markdown engine interprets "$" as LaTeX code
+        user_message = user_message.replace("$", r"\$")
+        
+        # Display message as a speech bubble.
+        with st.chat_message("user"):
+            st.text(user_message)
+        
+        # Display assistant response as a speech bubble.
+        with st.chat_message("assistant"):
+            # Build a detailed prompt.
+            if DEBUG_MODE:
+                with st.status("Computing prompt...") as status:
+                    full_prompt = build_question_prompt(user_message)
+                    st.code(full_prompt)
+                    status.update(label="Prompt computed")
+            else:
                 full_prompt = build_question_prompt(user_message)
-                st.code(full_prompt)
-                status.update(label="Prompt computed")
-        else:
-            full_prompt = build_question_prompt(user_message)
-        
-        # Send prompt to echo function.
-        with st.spinner("Thinking..."):
-            time.sleep(1)
-            response_gen = get_response(full_prompt)
-        
-        # Put everything after the spinners in a container to fix the
-        # ghost message bug.
-        with st.container():
-            # Stream the response.
-            response = st.write_stream(response_gen)
             
-            # Add messages to chat history.
-            st.session_state.messages.append({"role": "user", "content": user_message})
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            # Send prompt to echo function.
+            with st.spinner("Thinking..."):
+                time.sleep(1)
+                response_gen = get_response(full_prompt)
             
-            # Other stuff.
-            show_feedback_controls(len(st.session_state.messages) - 1)
-            send_telemetry(question=user_message, response=response)
-    
-    st.session_state.generating = False
+            # Put everything after the spinners in a container to fix the
+            # ghost message bug.
+            with st.container():
+                # Stream the response.
+                response = st.write_stream(response_gen)
+                
+                # Add messages to chat history.
+                st.session_state.messages.append({"role": "user", "content": user_message})
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                
+                # Other stuff.
+                show_feedback_controls(len(st.session_state.messages) - 1)
+                send_telemetry(question=user_message, response=response)
+    finally:
+        # Always reset the generating flag, even if an error occurs
+        st.session_state.generating = False
