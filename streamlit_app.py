@@ -8,7 +8,7 @@ from streamlit.runtime.scriptrunner import RerunException
 from streamlit.runtime.scriptrunner import StopException
 
 st.set_page_config(
-    page_title="Streamlit AI assistant", 
+    page_title="JereChat", 
     page_icon="✨",
     initial_sidebar_state="expanded"
 )
@@ -45,14 +45,22 @@ def check_invitation_code():
                 .valid {
                     color: #00cc00;
                 }
+                .stTextInput > div > div > input {
+                    text-align: center;
+                }
             </style>
         """, unsafe_allow_html=True)
         
         # Create a form for the invitation code
         with st.form("invitation_form"):
-            st.markdown("## :material/password: Enter Invitation Code")
-            code = st.text_input("Please enter your 6-digit invitation code:", "", type="password")
-            submitted = st.form_submit_button("Submit")
+            st.markdown("## :material/lock_person: Enter Invitation Code")
+            st.warning("We are sorry, but JereChat is not completely open right now.\
+                You can get access only by invitation codes. You could ask Jeremy for a code--",icon=":material/lock:")
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                code = st.text_input("Enter your 6-digit code:", max_chars=6, type="default")
+            with col2:
+                submitted = st.form_submit_button("Submit")
             
             if submitted:
                 code_found = False
@@ -192,7 +200,7 @@ def show_feedback_controls(message_index):
             if st.form_submit_button("Send feedback"):
                 st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long", )
 
-@st.dialog("Legal disclaimer")
+@st.dialog("Disclaimer")
 def show_disclaimer_dialog():
     st.caption("""
         Using this chatbot means that you agree to the following:
@@ -205,7 +213,7 @@ def show_disclaimer_dialog():
 # Draw the UI
 
 st.markdown("""
-<div style='font-size: 5rem; line-height: 1;'>❉</div>
+<div style='font-family: "Default"; font-size: 5rem; line-height: 1;'>❉</div>
 """, unsafe_allow_html=True)
 
 title_row = st.container(
@@ -215,7 +223,7 @@ title_row = st.container(
 
 with title_row:
     st.title(
-        "Streamlit AI assistant",
+        "JereChat",
         anchor=False,
         width="stretch",
     )
@@ -250,8 +258,10 @@ if not user_first_interaction and not has_message_history:
             key="selected_suggestion",
         )
     
+    st.checkbox("I have read and acknowledge the disclaimer", key="disclaimer_acknowledged")
+    
     st.button(
-        "&nbsp;:small[:gray[:material/balance: Legal disclaimer]]",
+        "&nbsp;:small[:gray[:material/balance: Disclaimer]]",
         type="tertiary",
         on_click=show_disclaimer_dialog,
     )
