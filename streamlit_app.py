@@ -10,13 +10,14 @@ from streamlit.runtime.scriptrunner import StopException
 st.set_page_config(
     page_title="Streamlit AI assistant", 
     page_icon="✨",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 def check_invitation_code():
-    """Check if user has entered a valid invitation code."""
+    """Check if user has entered a valid and not expired invitation code."""
     if 'invitation_verified' not in st.session_state:
         st.session_state.invitation_verified = False
+        st.session_state.active_code = None
     
     if not st.session_state.invitation_verified:
         # Get valid codes from secrets
@@ -37,6 +38,13 @@ def check_invitation_code():
                 .stTextInput {
                     z-index: 1002;
                 }
+                .expired {
+                    color: #ff4b4b;
+                    font-weight: bold;
+                }
+                .valid {
+                    color: #00cc00;
+                }
             </style>
         """, unsafe_allow_html=True)
         
@@ -47,10 +55,22 @@ def check_invitation_code():
             submitted = st.form_submit_button("Submit")
             
             if submitted:
-                if code in valid_codes:
-                    st.session_state.invitation_verified = True
-                    st.rerun()
-                else:
+                code_found = False
+                today = datetime.date.today()
+                
+                for code_info in valid_codes:
+                    if code == code_info['code_number']:
+                        code_found = True
+                        expiry_date = datetime.datetime.strptime(code_info['code_expiry_date'], "%Y-%m-%d").date()
+                        if today > expiry_date:
+                            st.error(f"❌ This invitation code expired on {expiry_date}. Please request a new one.")
+                        else:
+                            st.session_state.invitation_verified = True
+                            st.session_state.active_code = code_info
+                            st.rerun()
+                        break
+                
+                if not code_found:
                     st.error("❌ Invalid invitation code. Please try again.")
         
         # Prevent the rest of the app from running
@@ -63,7 +83,28 @@ check_invitation_code()
 # Sidebar with 'My Code' section
 with st.sidebar:
     st.markdown("## My Code")
-    st.markdown("""#### Great! You have an invitation code!""")
+    if 'active_code' in st.session_state and st.session_state.active_code:
+        code_info = st.session_state.active_code
+        expiry_date = datetime.datetime.strptime(code_info['code_expiry_date'], "%Y-%m-%d").date()
+        today = datetime.date.today()
+        days_remaining = (expiry_date - today).days
+        
+        status = "✅ Valid" if today <= expiry_date else "❌ Expired"
+        status_color = "green" if today <= expiry_date else "red"
+        
+        st.markdown(f"""#### You have an invite code. See below for more info.""")
+        st.markdown(f"### Invitation Code Details")
+        st.markdown(f"**Code:** `{code_info['code_number']}`")
+        st.markdown(f"**Status:** <span style='color:{status_color}'>{status}</span>", unsafe_allow_html=True)
+        st.markdown(f"**Notes:** {code_info['code_notes']}")
+        st.markdown(f"**Expiry Date:** {expiry_date.strftime('%B %d, %Y')}")
+            
+        if today <= expiry_date:
+            st.markdown(f"**Expires in:** {days_remaining} days")
+        else:
+            st.error("This code has expired. Please contact support for a new invitation code.")
+    else:
+        st.markdown("No active invitation code found.")
 
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
