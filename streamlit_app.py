@@ -59,10 +59,6 @@ def check_invitation_code():
 # Check invitation code before showing the app
 check_invitation_code()
 
-# Initialize session state flags
-if "generating" not in st.session_state:
-    st.session_state.generating = False
-
 # -----------------------------------------------------------------------------
 # Sidebar with 'My Code' section
 with st.sidebar:
@@ -217,7 +213,7 @@ if not user_first_interaction and not has_message_history:
     st.session_state.messages = []
     
     with st.container():
-        st.chat_input("Ask a question...", key="initial_question", disabled=st.session_state.generating)
+        st.chat_input("Ask a question...", key="initial_question")
         
         selected_suggestion = st.pills(
             label="Examples",
@@ -235,7 +231,7 @@ if not user_first_interaction and not has_message_history:
     st.stop()
 
 # Show chat input at the bottom when a question has been asked.
-user_message = st.chat_input("Ask a follow-up...", disabled=st.session_state.generating)
+user_message = st.chat_input("Ask a follow-up...")
 
 if not user_message:
     if user_just_asked_initial_question:
@@ -269,13 +265,13 @@ for i, message in enumerate(st.session_state.messages):
         if message["role"] == "assistant":
             show_feedback_controls(i)
 
-if user_message and not st.session_state.generating:
+if user_message and not st.session_state.get("generating", False):
     # When the user posts a message, store it and set generating flag
     st.session_state.pending_message = user_message
     st.session_state.generating = True
     st.rerun()
 
-if st.session_state.generating and "pending_message" in st.session_state:
+if st.session_state.get("generating", False) and "pending_message" in st.session_state:
     try:
         # Process the pending message
         user_message = st.session_state.pending_message
