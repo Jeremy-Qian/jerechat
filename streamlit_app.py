@@ -63,7 +63,7 @@ check_invitation_code()
 # Sidebar with 'My Code' section
 with st.sidebar:
     st.markdown("## My Code")
-    st.markdown("""####Great! You have an invitation code!""")
+    st.markdown("""#### Great! You have an invitation code!""")
 
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
@@ -81,12 +81,11 @@ CORTEX_URL = (
 GITHUB_URL = "https://github.com/streamlit/streamlit-assistant"
 
 SUGGESTIONS = {
-    ":blue[:material/local_library:] What is Streamlit?": (
-        "What is Streamlit, what is it great at, and what can I do with it?"
+    ":blue[:material/door_open:] Knock Knock!": (
+        "Play Knock Knock"
     ),
-    ":green[:material/database:] Help me understand session state": (
-        "Help me understand session state. What is it for? "
-        "What are gotchas? What are alternatives?"
+    ":green[:material/sentiment_very_satisfied:] Tell a joke": (
+        "Tell a joke"
     ),
     ":orange[:material/multiline_chart:] How do I make an interactive chart?": (
         "How do I make a chart where, when I click, another chart updates? "
@@ -150,7 +149,7 @@ def show_feedback_controls(message_index):
             ""  # Add some space
             
             if st.form_submit_button("Send feedback"):
-                st.success("Thank you for your feedback! (This is a demo)")
+                st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long", )
 
 @st.dialog("Legal disclaimer")
 def show_disclaimer_dialog():
