@@ -154,7 +154,7 @@ def show_feedback_controls(message_index):
             ""  # Add some space
             
             if st.form_submit_button("Send feedback"):
-                st.success("Thank you for your feedback! (This is a demo)")
+                st.toast("Thank you for your feedback!")
 
 @st.dialog("Legal disclaimer")
 def show_disclaimer_dialog():
