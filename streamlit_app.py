@@ -13,27 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-    <style>
-        .material-symbols-rounded {
-            font-family: 'Material Symbols Rounded', sans-serif;
-            font-weight: normal;
-            font-style: normal;
-            font-size: 24px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            display: inline-block;
-            white-space: nowrap;
-            word-wrap: normal;
-            direction: ltr;
-            -webkit-font-feature-settings: 'liga';
-            -webkit-font-smoothing: antialiased;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 def check_invitation_code():
     """Check if user has entered a valid and not expired invitation code."""
     if 'invitation_verified' not in st.session_state:
@@ -71,7 +50,7 @@ def check_invitation_code():
         
         # Create a form for the invitation code
         with st.form("invitation_form"):
-            st.markdown("## 🔑 Enter Invitation Code")
+            st.markdown("## :material/password: Enter Invitation Code")
             code = st.text_input("Please enter your 6-digit invitation code:", "", type="password")
             submitted = st.form_submit_button("Submit")
             
