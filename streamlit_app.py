@@ -195,11 +195,10 @@ def show_feedback_controls(message_index):
 @st.dialog("Legal disclaimer")
 def show_disclaimer_dialog():
     st.caption("""
-        This AI chatbot is a demo version. Answers may be inaccurate, inefficient, or biased.
-        Any use or decisions based on such answers should include reasonable
-        practices including human oversight to ensure they are safe,
-        accurate, and suitable for your intended purpose. This is a demonstration
-        application without AI capabilities.
+        Using this chatbot means that you agree to the following:
+        1. You have read this disclaimer and fully understand;
+        2. You understand that answers may be inaccurate, and you are willing to recieve the responses;
+        3. You understand that the developer is not responsible for any damage or loss caused by this chatbot.
     """)
 
 # -----------------------------------------------------------------------------
