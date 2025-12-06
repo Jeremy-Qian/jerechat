@@ -136,9 +136,8 @@ SUGGESTIONS = {
     ":green[:material/sentiment_very_satisfied:] Tell a joke": (
         "Tell a joke"
     ),
-    ":orange[:material/multiline_chart:] How do I make an interactive chart?": (
-        "How do I make a chart where, when I click, another chart updates? "
-        "Show me examples with Altair or Plotly."
+    ":orange[:material/typewriter:] Write an essay": (
+        "Write an essay"
     ),
     ":violet[:material/apparel:] How do I customize my app?": (
         "How do I customize my app? What does Streamlit offer? No hacks please."
