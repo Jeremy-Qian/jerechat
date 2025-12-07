@@ -86,10 +86,10 @@
 --broski
 
 -Imma cook you
--I'm gonna cook you
--I am going to cook you up
 --I'm gonna cook *you* first.
 
 -Write an essay
---Okay, here it is:\n\n###PLEASE DONATE!\nThis is where ‘Did You Know’ used to be. But, DID YOU KNOW, that The Rampage is a nonprofit? Did you know that the CEOs work so hard just to scrape together enough money for printing? We have so many subscribers that we could not print at home. Printing outside costs money. And our money always comes from our own work. Last issue, we found that we no longer had the power to manage the huge amount of subscribers, which meant a huge amount of money needed. Some people who longed to subscribe were unable to do so because of our financial problems. Please donate ¥5. Or, you could donate any amount you want. You can donate via the QR code below. Thank you, and Merry Christmas!
+--Okay, here it is:||### PLEASE DONATE!||This is where 'Did You Know' used to be. But, DID YOU KNOW, that The Rampage is a nonprofit? Did you know that the CEOs work so hard just to scrape together enough money for printing? We have so many subscribers that we could not print at home. Printing outside costs money. And our money always comes from our own work. Last issue, we found that we no longer had the power to manage the huge amount of subscribers, which meant a huge amount of money needed. Some people who longed to subscribe were unable to do so because of our financial problems. Please donate ¥5. Or, you could donate any amount you want. You can donate via the QR code below. Thank you, and Merry Christmas!
 
+-Write some code
+--Okay, I will write some code for you. ||```print("@John Pan, Stork Man!")``` ||That is python, and the `print` function is used to print text to the console.

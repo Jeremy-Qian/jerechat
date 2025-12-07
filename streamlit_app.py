@@ -102,7 +102,8 @@ with st.sidebar:
         
         st.markdown(f"""#### You have an invite code. See below for more info.""")
         st.markdown(f"### Invitation Code Details")
-        st.markdown(f"**Code:** `{code_info['code_number']}`")
+        with st.expander(f"**Click to see code:**", expanded=False):
+            st.write(f"**{code_info['code_number']}**")
         st.markdown(f"**Status:** <span style='color:{status_color}'>{status}</span>", unsafe_allow_html=True)
         st.markdown(f"**Notes:** {code_info['code_notes']}")
         st.markdown(f"**Expiry Date:** {expiry_date.strftime('%B %d, %Y')}")
@@ -139,8 +140,8 @@ SUGGESTIONS = {
     ":orange[:material/draft:] Write an essay": (
         "Write an essay"
     ),
-    ":violet[:material/box:] How do I customize my app?": (
-        "How do I customize my app? What does Streamlit offer? No hacks please."
+    ":violet[:material/code:] Write some code": (
+        "Write some code"
     ),
     ":red[:material/deployed_code:] Deploying an app at work": (
         "How do I deploy an app at work? Give me easy and performant options."
@@ -162,6 +163,8 @@ def get_response(prompt):
     """Generate response using jerechat API"""
     try:
         response_text = jc.generate_response(prompt, "1.5")
+        # Handle multi-line responses with || separator
+        response_text = response_text.replace("||", "  \n\n")
         # Yield chunks of ~20 characters to simulate line-by-line output
         chunk_size = 20
         for i in range(0, len(response_text), chunk_size):
@@ -211,9 +214,7 @@ def show_disclaimer_dialog():
 # -----------------------------------------------------------------------------
 # Draw the UI
 
-st.markdown("""
-<div style='font-family: "Default"; font-size: 5rem; line-height: 1;'>❉</div>
-""", unsafe_allow_html=True)
+st.badge(""":material/science: Experimental""")
 
 title_row = st.container(
     horizontal=True,
@@ -249,6 +250,19 @@ if not user_first_interaction and not has_message_history:
     
     with st.container():
         st.chat_input("Ask a question...", key="initial_question")
+        col1, col2 = st.columns([2,5])
+        with col1:
+            selected_model = st.pills(
+            label="Models",
+            label_visibility="collapsed",
+            options=[
+                ":material/neurology: DeepThink(Rampion 2)",
+            ],
+            key="selected_model",
+            disabled=True,
+        )
+        with col2:
+            st.markdown("", help="Sorry, JereChat Rampion 2 is still in development.")
         
         selected_suggestion = st.pills(
             label="Examples",
@@ -294,7 +308,11 @@ for i, message in enumerate(st.session_state.messages):
         if message["role"] == "assistant":
             st.container()  # Fix ghost message bug
         
-        st.markdown(message["content"])
+        # Handle multi-line responses with || separator
+        content = message["content"]
+        if "||" in content and message["role"] == "assistant":
+            content = content.replace("||", "  \n\n")
+        st.markdown(content)
         
         if message["role"] == "assistant":
             show_feedback_controls(i)
