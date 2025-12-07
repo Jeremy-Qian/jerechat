@@ -143,7 +143,7 @@ SUGGESTIONS = {
     ":violet[:material/code:] Write some code": (
         "Write some code"
     ),
-    ":red[:material/cooking_pan:] Cook JereChat": (
+    ":red[:material/skillet:] Cook JereChat": (
         "I'm gonna cook you"
     ),
 }
