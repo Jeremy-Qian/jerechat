@@ -136,7 +136,7 @@ SUGGESTIONS = {
     ":green[:material/sentiment_very_satisfied:] Tell a joke": (
         "Tell a joke"
     ),
-    ":orange[:material/typewriter:] Write an essay": (
+    ":orange[:material/pen:] Write an essay": (
         "Write an essay"
     ),
     ":violet[:material/apparel:] How do I customize my app?": (
