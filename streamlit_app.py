@@ -193,14 +193,22 @@ def show_feedback_controls(message_index):
             details = st.text_area("More information (optional)")
             
             if st.checkbox("Include chat history with my feedback", True):
-                relevant_history = st.session_state.messages[:message_index]
+                relevant_history = st.session_state.messages[:message_index + 1]
             else:
                 relevant_history = []
             
             ""  # Add some space
             
             if st.form_submit_button("Send feedback"):
-                st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long", )
+                # Save feedback to Supabase
+                feedback_type = "good" if rating and rating >= 3 else "bad"
+                chat_history = relevant_history if 'relevant_history' in locals() and relevant_history else []
+                try:
+                    from database import save_feedback
+                    save_feedback(message_index, feedback_type, chat_history)
+                    st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long")
+                except Exception as e:
+                    st.toast(f"Error saving feedback: {e}", icon=":material/error:")
 
 @st.dialog("Disclaimer")
 def show_disclaimer_dialog():
