@@ -143,8 +143,8 @@ SUGGESTIONS = {
     ":violet[:material/code:] Write some code": (
         "Write some code"
     ),
-    ":red[:material/deployed_code:] Deploying an app at work": (
-        "How do I deploy an app at work? Give me easy and performant options."
+    ":red[:material/pan:] Cook JereChat": (
+        "I'm gonna cook you"
     ),
 }
 
