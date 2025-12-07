@@ -3,9 +3,10 @@ base = "light"
 
 # General color setup
 textColor = "#3f3f46"
-primaryColor = "#60a5fa"
-backgroundColor = "#fafafa"
+primaryColor = "#53c5baff"
+backgroundColor = "#fefefe"
 secondaryBackgroundColor = "#ffffff"
+
 
 # Widgets
 showWidgetBorder = true
