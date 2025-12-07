@@ -136,10 +136,10 @@ SUGGESTIONS = {
     ":green[:material/sentiment_very_satisfied:] Tell a joke": (
         "Tell a joke"
     ),
-    ":orange[:material/pen:] Write an essay": (
+    ":orange[:material/draft:] Write an essay": (
         "Write an essay"
     ),
-    ":violet[:material/apparel:] How do I customize my app?": (
+    ":violet[:material/box:] How do I customize my app?": (
         "How do I customize my app? What does Streamlit offer? No hacks please."
     ),
     ":red[:material/deployed_code:] Deploying an app at work": (
@@ -257,12 +257,9 @@ if not user_first_interaction and not has_message_history:
             key="selected_suggestion",
         )
     
-    st.checkbox("I have read and acknowledge the disclaimer", key="disclaimer_acknowledged")
     
     st.button(
-        "&nbsp;:small[:gray[:material/balance: Disclaimer]]",
-        type="tertiary",
-        on_click=show_disclaimer_dialog,
+        "&nbsp;:small[:gray[:material/balance: Disclaimer]]",type="tertiary",on_click=show_disclaimer_dialog,
     )
     
     st.stop()
