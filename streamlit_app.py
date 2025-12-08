@@ -258,9 +258,7 @@ if not user_first_interaction and not has_message_history:
     
     with st.container():
         st.chat_input("Ask a question...", key="initial_question")
-        col1, col2 = st.columns([2,5])
-        with col1:
-            selected_model = st.pills(
+        selected_model = st.pills(
             label="Models",
             label_visibility="collapsed",
             options=[
@@ -269,8 +267,7 @@ if not user_first_interaction and not has_message_history:
             key="selected_model",
             disabled=True,
         )
-        with col2:
-            st.markdown("", help="Sorry, JereChat Rampion 2 is still in development.")
+
         
         selected_suggestion = st.pills(
             label="Examples",
