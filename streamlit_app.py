@@ -360,4 +360,3 @@ if user_message:
             
             # Other stuff.
             show_feedback_controls(len(st.session_state.messages) - 1)
-            send_telemetry(question=user_message, response=response)
