@@ -14,7 +14,7 @@ def show_invitation_code_request():
     st.success("Your request has been submitted!")
     st.markdown("### Your free invitation code is:")
     # Get free invitation code from secrets instead of hardcoding
-    free_code = st.secrets.get("freekey")
+    free_code = st.secrets["freekey"]
     st.markdown(f"## :green[{free_code}]")
     st.info("You can use this code above to access JereChat.")
 
