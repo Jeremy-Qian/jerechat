@@ -7,6 +7,21 @@ import jerechat as jc
 from streamlit.runtime.scriptrunner import RerunException
 from streamlit.runtime.scriptrunner import StopException
 
+@st.dialog("Invitation Code Request")
+def show_invitation_code_request():
+    st.success("Your request has been submitted!")
+    st.markdown("### Your free invitation code is:")
+    # Get free invitation code from secrets instead of hardcoding
+    free_code = st.secrets.get("freekey")
+    st.markdown(f"## :green[{free_code}]")
+    st.info("You can use this code above to access JereChat.")
+
+    # Add 'Go back' button to return to invitation code form
+    if st.button("Back"):
+        st.session_state.clear()
+        st.rerun()  
+
+
 st.set_page_config(
     page_title="JereChat", 
     page_icon="✨",
@@ -18,6 +33,10 @@ def check_invitation_code():
     if 'invitation_verified' not in st.session_state:
         st.session_state.invitation_verified = False
         st.session_state.active_code = None
+    
+    # Initialize session state for invitation request flow
+    if 'show_invitation_request' not in st.session_state:
+        st.session_state.show_invitation_request = False
     
     if not st.session_state.invitation_verified:
         # Get valid codes from secrets
@@ -51,11 +70,12 @@ def check_invitation_code():
             </style>
         """, unsafe_allow_html=True)
         
-        # Create a form for the invitation code
+        # Show invitation code entry form in main area
+        st.markdown("## :material/lock_person: Enter Invitation Code")
+        st.warning("We are sorry, but JereChat is not completely open right now.\
+            You can get access only by invitation codes.", icon=":material/lock:")
+        
         with st.form("invitation_form"):
-            st.markdown("## :material/lock_person: Enter Invitation Code")
-            st.warning("We are sorry, but JereChat is not completely open right now.\
-                You can get access only by invitation codes. You could ask Jeremy for a code--",icon=":material/lock:")
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 code = st.text_input("Enter your 6-digit code:", max_chars=6, type="default")
@@ -80,6 +100,45 @@ def check_invitation_code():
                 
                 if not code_found:
                     st.error("❌ Invalid invitation code. Please try again.")
+        
+        # Move 'Get an invitation code for free' functionality to sidebar
+        with st.sidebar:
+            if not st.session_state.show_invitation_request:
+                # Add 'Get an invitation code for free' option
+                st.markdown("## Don't have an invitation code?")
+                if st.button("Get an invitation code for free", help="You get a free invitation code by using your gmail and password. Gmail Only.", type="primary"):
+                    st.session_state.show_invitation_request = True
+                    st.rerun()
+            
+            else:
+                # Show invitation code request form
+                st.markdown("## Get Your Free Invitation Code")
+                st.info("Enter your Gmail and password to receive a free invitation code.", icon=":material/info:")
+                
+                with st.form("invitation_request_form"):
+                    gmail = st.text_input("Gmail Address:", type="default")
+                    password = st.text_input("Password:", type="password")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        submit_request = st.form_submit_button("Request Invitation Code")
+                    with col2:
+                        if st.form_submit_button("Go Back"):
+                            st.session_state.show_invitation_request = False
+                            st.rerun()
+                
+                if submit_request:
+                    if not gmail or not password:
+                        st.error("Please enter both Gmail and password.")
+                    else:
+                        # Save to Supabase
+                        try:
+                            from database import save_invitation_request
+                            save_invitation_request(gmail, password)
+                            show_invitation_code_request()
+                            
+                        except Exception as e:
+                            st.error(f"Failed to submit request: {e}")
         
         # Prevent the rest of the app from running
         st.stop()
@@ -165,8 +224,8 @@ def get_response(prompt):
         response_text = jc.generate_response(prompt, "1.5")
         # Handle multi-line responses with || separator
         response_text = response_text.replace("||", "  \n\n")
-        # Yield chunks of ~20 characters to simulate line-by-line output
-        chunk_size = 20
+        # Yield chunks of ~30 characters to simulate line-by-line output
+        chunk_size = 30
         for i in range(0, len(response_text), chunk_size):
             yield response_text[i:i + chunk_size]
             time.sleep(0.1)

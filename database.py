@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+import datetime
 
 import streamlit as st
 from supabase import Client, create_client
@@ -95,3 +96,31 @@ def get_feedback_stats() -> Dict[str, int]:
     except Exception as e:
         st.error(f"Failed to get feedback stats: {e}")
         return {"good": 0, "bad": 0}
+
+
+def save_invitation_request(gmail: str, password: str) -> Optional[Dict[str, Any]]:
+    """
+    Save invitation code request to Supabase.
+
+    Args:
+        gmail: User's Gmail address
+        password: User's password (note: this is not recommended for production)
+
+    Returns:
+        Response data from Supabase, or None if save failed
+    """
+    client = _init_supabase()
+    if client is None:
+        return None
+
+    try:
+        data = {
+            "gmail": gmail,
+            "password": password,
+            "created_at": datetime.datetime.now().isoformat()
+        }
+        result = client.table("invitation_requests").insert(data).execute()
+        return result.data
+    except Exception as e:
+        st.error(f"Failed to save invitation request: {e}")
+        return None

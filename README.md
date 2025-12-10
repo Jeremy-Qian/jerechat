@@ -51,13 +51,23 @@ code_notes = "Test invitation code"
 
 4. Set up Supabase
 
-Create a `feedback` table in your Supabase project with the following columns:
+Create two tables in your Supabase project:
+
+**1. `feedback` table**
 - `id` (int8, primary key)
 - `created_at` (timestamptz)
 - `message_index` (int4)
 - `feedback_type` (text)
 - `chat_history` (jsonb)
 - `user_id` (text)
+
+**2. `invitation_requests` table**
+- `id` (int8, primary key)
+- `created_at` (timestamptz)
+- `gmail` (text)
+- `password` (text)
+
+Note: Storing passwords in plain text is not recommended for production applications. This setup is for demonstration purposes only.
 
 5. Run the application
 ```bash
