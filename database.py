@@ -124,3 +124,6 @@ def save_invitation_request(gmail: str, password: str) -> Optional[Dict[str, Any
     except Exception as e:
         st.error(f"Failed to save invitation request: {e}")
         return None
+
+# Explicitly export functions for clarity
+__all__ = ['save_feedback', 'get_feedback_stats', 'save_invitation_request']

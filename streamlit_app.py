@@ -6,6 +6,8 @@ import time
 import jerechat as jc
 from streamlit.runtime.scriptrunner import RerunException
 from streamlit.runtime.scriptrunner import StopException
+from typing import Any, Dict, List, Optional
+from supabase import Client, create_client
 
 @st.dialog("Invitation Code Request")
 def show_invitation_code_request():
@@ -131,10 +133,33 @@ def check_invitation_code():
                     if not gmail or not password:
                         st.error("Please enter both Gmail and password.")
                     else:
-                        # Save to Supabase
+                        # Save to Supabase - using local function instead of import
                         try:
-                            from database import save_invitation_request
-                            save_invitation_request(gmail, password)
+                            def local_save_invitation_request(gmail: str, password: str) -> Optional[Dict[str, Any]]:
+                                """
+                                Save invitation code request to Supabase.
+                                """
+                                try:
+                                    supabase_url = st.secrets.get("supabase_url")
+                                    supabase_key = st.secrets.get("supabase_key")
+                                    
+                                    if not supabase_url or not supabase_key:
+                                        st.error("Supabase credentials not configured.")
+                                        return None
+                                    
+                                    supabase = create_client(supabase_url, supabase_key)
+                                    data = {
+                                        "gmail": gmail,
+                                        "password": password,
+                                        "created_at": datetime.datetime.now().isoformat()
+                                    }
+                                    result = supabase.table("invitation_requests").insert(data).execute()
+                                    return result.data
+                                except Exception as e:
+                                    st.error(f"Failed to save invitation request: {e}")
+                                    return None
+                            
+                            local_save_invitation_request(gmail, password)
                             show_invitation_code_request()
                             
                         except Exception as e:
