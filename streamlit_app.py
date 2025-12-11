@@ -298,9 +298,9 @@ def show_feedback_controls(message_index):
 def show_disclaimer_dialog():
     st.caption("""
         Using this chatbot means that you agree to the following:
-        1. You have read this disclaimer and fully understand;
-        2. You understand that answers may be inaccurate, and you are willing to recieve the responses;
-        3. You understand that the developer is not responsible for any damage or loss caused by this chatbot.
+        - You have read this disclaimer and fully understand;
+        - You understand that answers may be inaccurate, and you are willing to recieve the responses;
+        - You understand that the developer is not responsible for any damage or loss caused by this chatbot.
     """)
 
 # -----------------------------------------------------------------------------
