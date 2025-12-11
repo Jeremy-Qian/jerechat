@@ -289,7 +289,7 @@ def show_feedback_controls(message_index):
                 chat_history = relevant_history if 'relevant_history' in locals() and relevant_history else []
                 try:
                     from database import save_feedback
-                    save_feedback(message_index, feedback_type, chat_history)
+                    save_feedback(message_index, feedback_type, chat_history, details=details)
                     st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long")
                 except Exception as e:
                     st.toast(f"Error saving feedback: {e}", icon=":material/error:")

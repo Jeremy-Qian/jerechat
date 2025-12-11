@@ -39,6 +39,7 @@ def save_feedback(
     feedback_type: str,
     chat_history: Optional[List[Dict]] = None,
     user_id: str = "anonymous",
+    details: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     Save user feedback to Supabase.
@@ -48,6 +49,7 @@ def save_feedback(
         feedback_type: Type of feedback ("good" or "bad")
         chat_history: Optional list of chat messages for context
         user_id: User identifier (defaults to "anonymous")
+        details: Optional additional feedback details
 
     Returns:
         Response data from Supabase, or None if save failed
@@ -62,6 +64,7 @@ def save_feedback(
             "feedback_type": feedback_type,
             "chat_history": chat_history if chat_history else [],
             "user_id": user_id,
+            "details": details,
         }
         result = client.table("feedback").insert(data).execute()
         return result.data
