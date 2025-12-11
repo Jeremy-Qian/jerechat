@@ -23,6 +23,15 @@ def show_invitation_code_request():
         st.session_state.clear()
         st.rerun()  
 
+@st.dialog("Free Key Disclaimer")
+def show_freekey_disclaimer_dialog():
+    st.caption("""
+        Clicking the above button means that you acknowledge to the following:
+        - You have read this disclaimer and fully understand;
+        - You understand that your email data will be sent and stored to a remote SQL database;
+        - You understand that the developer is not responsible for any damage or loss caused this website.
+    """)
+
 
 st.set_page_config(
     page_title="JereChat", 
@@ -75,7 +84,7 @@ def check_invitation_code():
         # Show invitation code entry form in main area
         st.markdown("## :material/lock_person: Enter Invitation Code")
         st.warning("We are sorry, but JereChat is not completely open right now.\
-            You can get access only by invitation codes.", icon=":material/lock:")
+            You can get access only by invitation codes. Check the sidebar for a free invitation code.", icon=":material/lock:")
         
         with st.form("invitation_form"):
             col1, col2, col3 = st.columns([1, 1, 1])
@@ -111,6 +120,13 @@ def check_invitation_code():
                 if st.button("Get an invitation code for free", help="You get a free invitation code by using your gmail and password. Gmail Only.", type="primary"):
                     st.session_state.show_invitation_request = True
                     st.rerun()
+                
+                # Add disclaimer dialog
+                st.button(
+                    "&nbsp;:small[:gray[:material/balance: Disclaimer]]",
+                    type="tertiary",
+                    on_click=show_freekey_disclaimer_dialog,
+                )
             
             else:
                 # Show invitation code request form
