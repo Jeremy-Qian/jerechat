@@ -9,30 +9,6 @@ from streamlit.runtime.scriptrunner import StopException
 from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
 
-@st.dialog("Invitation Code Request")
-def show_invitation_code_request():
-    st.success("Your request has been submitted!")
-    st.markdown("### Your free invitation code is:")
-    # Get free invitation code from secrets instead of hardcoding
-    free_code = st.secrets["freekey"]
-    st.markdown(f"## :green[{free_code}]")
-    st.info("You can use this code above to access JereChat.")
-
-    # Add 'Go back' button to return to invitation code form
-    if st.button("Back"):
-        st.session_state.clear()
-        st.rerun()  
-
-@st.dialog("Free Key Disclaimer")
-def show_freekey_disclaimer_dialog():
-    st.caption("""
-        Clicking the above button means that you acknowledge to the following:
-        - You have read this disclaimer and fully understand;
-        - You understand that your email data will be sent and stored to a remote SQL database;
-        - You understand that the developer is not responsible for any damage or loss caused this website.
-    """)
-
-
 st.set_page_config(
     page_title="JereChat", 
     page_icon="✨",
@@ -44,10 +20,6 @@ def check_invitation_code():
     if 'invitation_verified' not in st.session_state:
         st.session_state.invitation_verified = False
         st.session_state.active_code = None
-    
-    # Initialize session state for invitation request flow
-    if 'show_invitation_request' not in st.session_state:
-        st.session_state.show_invitation_request = False
     
     if not st.session_state.invitation_verified:
         # Get valid codes from secrets
@@ -112,74 +84,9 @@ def check_invitation_code():
                 if not code_found:
                     st.error("❌ Invalid invitation code. Please try again.")
         
-        # Move 'Get an invitation code for free' functionality to sidebar
         with st.sidebar:
-            if not st.session_state.show_invitation_request:
-                # Add 'Get an invitation code for free' option
-                st.markdown("## Don't have an invitation code?")
-                if st.button("Get an invitation code for free", help="You get a free invitation code by using your gmail and password. Gmail Only.", type="primary"):
-                    st.session_state.show_invitation_request = True
-                    st.rerun()
-                
-                # Add disclaimer dialog
-                st.button(
-                    "&nbsp;:small[:gray[:material/balance: Disclaimer]]",
-                    type="tertiary",
-                    on_click=show_freekey_disclaimer_dialog,
-                )
-            
-            else:
-                # Show invitation code request form
-                st.markdown("## Get Your Free Invitation Code")
-                st.info("Enter your Gmail and password to receive a free invitation code.", icon=":material/info:")
-                
-                with st.form("invitation_request_form"):
-                    gmail = st.text_input("Gmail Address:", type="default")
-                    password = st.text_input("Password:", type="password")
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        submit_request = st.form_submit_button("Request Invitation Code")
-                    with col2:
-                        if st.form_submit_button("Go Back"):
-                            st.session_state.show_invitation_request = False
-                            st.rerun()
-                
-                if submit_request:
-                    if not gmail or not password:
-                        st.error("Please enter both Gmail and password.")
-                    else:
-                        # Save to Supabase - using local function instead of import
-                        try:
-                            def local_save_invitation_request(gmail: str, password: str) -> Optional[Dict[str, Any]]:
-                                """
-                                Save invitation code request to Supabase.
-                                """
-                                try:
-                                    supabase_url = st.secrets.get("supabase_url")
-                                    supabase_key = st.secrets.get("supabase_key")
-                                    
-                                    if not supabase_url or not supabase_key:
-                                        st.error("Supabase credentials not configured.")
-                                        return None
-                                    
-                                    supabase = create_client(supabase_url, supabase_key)
-                                    data = {
-                                        "gmail": gmail,
-                                        "password": password,
-                                        "created_at": datetime.datetime.now().isoformat()
-                                    }
-                                    result = supabase.table("invitation_requests").insert(data).execute()
-                                    return result.data
-                                except Exception as e:
-                                    st.error(f"Failed to save invitation request: {e}")
-                                    return None
-                            
-                            local_save_invitation_request(gmail, password)
-                            show_invitation_code_request()
-                            
-                        except Exception as e:
-                            st.error(f"Failed to submit request: {e}")
+            st.markdown("## Don't have an invitation code?")
+            st.info("Please contact the administrator to obtain an invitation code.")
         
         # Prevent the rest of the app from running
         st.stop()
@@ -368,15 +275,13 @@ if not user_first_interaction and not has_message_history:
             disabled=True,
         )
 
-        
         selected_suggestion = st.pills(
             label="Examples",
             label_visibility="collapsed",
             options=SUGGESTIONS.keys(),
             key="selected_suggestion",
         )
-    
-    
+
     st.button(
         "&nbsp;:small[:gray[:material/balance: Disclaimer]]",type="tertiary",on_click=show_disclaimer_dialog,
     )

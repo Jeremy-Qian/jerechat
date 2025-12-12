@@ -7,7 +7,6 @@ primaryColor = "#53c5baff"
 backgroundColor = "#fefefe"
 secondaryBackgroundColor = "#ffffff"
 
-
 # Widgets
 showWidgetBorder = true
 borderColor = "#eeeef0"

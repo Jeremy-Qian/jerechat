@@ -126,7 +126,6 @@ def chatbot():
         except Exception as e:
             print(f"JereChat: An error occurred: {e}")
 
-
 def generate_response(user_input: str, model: str = "1.5") -> str:
     """
     Generate response using loaded corpus.
@@ -146,7 +145,6 @@ def generate_response(user_input: str, model: str = "1.5") -> str:
     
     # Find and return best match
     return find_best_match(user_input, qa_pairs)
-
 
 if __name__ == "__main__":
     chatbot()

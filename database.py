@@ -7,7 +7,6 @@ from supabase import Client, create_client
 # Initialize Supabase client with error handling
 supabase: Optional[Client] = None
 
-
 def _init_supabase() -> Optional[Client]:
     """Initialize and return Supabase client, or None if configuration is missing."""
     global supabase
@@ -32,7 +31,6 @@ def _init_supabase() -> Optional[Client]:
             f"Failed to initialize Supabase client: {e}. Feedback features will be disabled."
         )
         return None
-
 
 def save_feedback(
     message_index: int,
@@ -72,7 +70,6 @@ def save_feedback(
         st.error(f"Failed to save feedback: {e}")
         return None
 
-
 def get_feedback_stats() -> Dict[str, int]:
     """
     Get feedback statistics.
@@ -100,33 +97,5 @@ def get_feedback_stats() -> Dict[str, int]:
         st.error(f"Failed to get feedback stats: {e}")
         return {"good": 0, "bad": 0}
 
-
-def save_invitation_request(gmail: str, password: str) -> Optional[Dict[str, Any]]:
-    """
-    Save invitation code request to Supabase.
-
-    Args:
-        gmail: User's Gmail address
-        password: User's password (note: this is not recommended for production)
-
-    Returns:
-        Response data from Supabase, or None if save failed
-    """
-    client = _init_supabase()
-    if client is None:
-        return None
-
-    try:
-        data = {
-            "gmail": gmail,
-            "password": password,
-            "created_at": datetime.datetime.now().isoformat()
-        }
-        result = client.table("invitation_requests").insert(data).execute()
-        return result.data
-    except Exception as e:
-        st.error(f"Failed to save invitation request: {e}")
-        return None
-
 # Explicitly export functions for clarity
-__all__ = ['save_feedback', 'get_feedback_stats', 'save_invitation_request']
+__all__ = ['save_feedback', 'get_feedback_stats']
