@@ -137,9 +137,12 @@ def generate_response(user_input: str, model: str = "1.5") -> str:
     Returns:
         str: The chatbot's response
     """
-    # Load corpus from the correct path
-    corpus_path = os.path.join(os.path.dirname(__file__), 'corpus.txt')
-    qa_pairs = load_corpus(corpus_path)
+    # Use a module-level cache to avoid reloading corpus on every call
+    if not hasattr(generate_response, '_qa_pairs'):
+        corpus_path = os.path.join(os.path.dirname(__file__), 'corpus.txt')
+        generate_response._qa_pairs = load_corpus(corpus_path)
+    
+    qa_pairs = generate_response._qa_pairs
     if not qa_pairs:
         return "I'm sorry, I don't have any knowledge base loaded to help you."
     
