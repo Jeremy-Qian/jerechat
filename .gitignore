@@ -5,3 +5,8 @@ __pycache__/
 .DS_Store
 __pycache__/.DS_Store
 .devcontainer
+
+.trae/
+.trae/documents/
+
+test*.py
