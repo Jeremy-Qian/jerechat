@@ -9,7 +9,7 @@ from streamlit.runtime.scriptrunner import StopException
 from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
 from jerechat import ab_testing, rampion2_model
-from database import save_preference_feedback, get_ab_test_results, get_response_time_stats
+from database import save_preference_feedback, save_original_feedback, get_ab_test_results, get_response_time_stats
 
 st.set_page_config(
     page_title="JereChat", 
@@ -247,6 +247,39 @@ def get_response(prompt, model_version):
 def send_telemetry(**kwargs):
     """Mock telemetry function"""
     pass
+
+# ORIGINAL FEEDBACK CONTROLS (commented out, kept for reference)
+# def show_feedback_controls(message_index):
+#     """Shows the "How did I do?" control."""
+#     st.write("")
+#     
+#     with st.popover("How did I do?"):
+#         with st.form(key=f"feedback-{message_index}", border=False):
+#             with st.container(gap=None):
+#                 st.markdown(":small[Rating]")
+#                 rating = st.feedback(options="stars")
+#             
+#             details = st.text_area("More information (optional)")
+#             
+#             if st.checkbox("Include chat history with my feedback", True):
+#                 relevant_history = st.session_state.messages[:message_index + 1]
+#             else:
+#                 relevant_history = []
+#             
+#             ""  # Add some space
+#             
+#             if st.form_submit_button("Send feedback"):
+#                 # Save feedback to Supabase
+#                 feedback_type = "good" if rating and rating >= 3 else "bad"
+#                 chat_history = relevant_history if 'relevant_history' in locals() and relevant_history else []
+#                 try:
+#                     from database import save_original_feedback
+#                     # Get user_id from session state or use anonymous
+#                     user_id = st.session_state.active_code.get('code_number', 'anonymous') if 'active_code' in st.session_state and st.session_state.active_code else 'anonymous'
+#                     save_original_feedback(message_index, feedback_type, chat_history, user_id=user_id, details=details)
+#                     st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long")
+#                 except Exception as e:
+#                     st.toast(f"Error saving feedback: {e}", icon=":material/error:")
 
 def show_preference_buttons(message_index, left_model, right_model):
     """Shows preference buttons for side-by-side comparison."""

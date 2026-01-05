@@ -32,6 +32,89 @@ def _init_supabase() -> Optional[Client]:
         )
         return None
 
+# ORIGINAL SAVE_FEEDBACK (commented out, kept for reference)
+# def save_feedback(
+#     message_index: int,
+#     feedback_type: str,
+#     chat_history: Optional[List[Dict]] = None,
+#     user_id: str = "anonymous",
+#     details: Optional[str] = None,
+#     model_version: Optional[str] = None,
+#     response_time: Optional[float] = None,
+# ) -> Optional[Dict[str, Any]]:
+#     """
+#     Save user feedback to Supabase.
+#
+#     Args:
+#         message_index: Index of the message being reviewed
+#         feedback_type: Type of feedback ("good" or "bad")
+#         chat_history: Optional list of chat messages for context
+#         user_id: User identifier (defaults to "anonymous")
+#         details: Optional additional feedback details
+#         model_version: Model version that generated the response ("1.5pro" or "rampion2")
+#         response_time: Time taken to generate response in seconds
+#
+#     Returns:
+#         Response data from Supabase, or None if save failed
+#     """
+#     client = _init_supabase()
+#     if client is None:
+#         return None
+#
+#     try:
+#         data = {
+#             "message_index": message_index,
+#             "feedback_type": feedback_type,
+#             "chat_history": chat_history if chat_history else [],
+#             "user_id": user_id,
+#             "details": details,
+#             "model_version": model_version,
+#             "response_time": response_time,
+#         }
+#         result = client.table("feedback").insert(data).execute()
+#         return result.data
+#     except Exception as e:
+#         st.error(f"Failed to save feedback: {e}")
+#         return None
+
+def save_original_feedback(
+    message_index: int,
+    feedback_type: str,
+    chat_history: Optional[List[Dict]] = None,
+    user_id: str = "anonymous",
+    details: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Save user feedback to Supabase original_feedback table.
+
+    Args:
+        message_index: Index of the message being reviewed
+        feedback_type: Type of feedback ("good" or "bad")
+        chat_history: Optional list of chat messages for context
+        user_id: User identifier (defaults to "anonymous")
+        details: Optional additional feedback details
+
+    Returns:
+        Response data from Supabase, or None if save failed
+    """
+    client = _init_supabase()
+    if client is None:
+        return None
+
+    try:
+        data = {
+            "message_index": message_index,
+            "feedback_type": feedback_type,
+            "chat_history": chat_history if chat_history else [],
+            "user_id": user_id,
+            "details": details,
+        }
+        result = client.table("original_feedback").insert(data).execute()
+        return result.data
+    except Exception as e:
+        st.error(f"Failed to save original feedback: {e}")
+        return None
+
 def save_preference_feedback(
     message_index: int,
     preferred_model: str,
