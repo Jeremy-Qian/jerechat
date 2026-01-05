@@ -8,6 +8,8 @@ from streamlit.runtime.scriptrunner import RerunException
 from streamlit.runtime.scriptrunner import StopException
 from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
+from jerechat import ab_testing, rampion2_model
+from database import save_preference_feedback, get_ab_test_results, get_response_time_stats
 
 st.set_page_config(
     page_title="JereChat", 
@@ -121,6 +123,53 @@ with st.sidebar:
             st.error("This code has expired. Please contact support for a new invitation code.")
     else:
         st.markdown("No active invitation code found.")
+    
+    st.divider()
+    
+    # A/B Testing Monitoring Dashboard
+    with st.expander("📊 A/B Test Dashboard", expanded=False):
+        st.markdown("### Preference Stats")
+        try:
+            ab_results = get_ab_test_results()
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### 1.5pro")
+                st.metric("👍 Preferred", ab_results["1.5pro"]["good"])
+                st.metric("👎 Not Preferred", ab_results["1.5pro"]["bad"])
+            
+            with col2:
+                st.markdown("#### Rampion 2")
+                st.metric("👍 Preferred", ab_results["rampion2"]["good"])
+                st.metric("👎 Not Preferred", ab_results["rampion2"]["bad"])
+            
+            # Calculate preference rate
+            total_15pro = ab_results["1.5pro"]["good"] + ab_results["1.5pro"]["bad"]
+            total_r2 = ab_results["rampion2"]["good"] + ab_results["rampion2"]["bad"]
+            
+            if total_15pro > 0:
+                rate_15pro = (ab_results["1.5pro"]["good"] / total_15pro) * 100
+                st.metric("1.5pro Preference Rate", f"{rate_15pro:.1f}%")
+            
+            if total_r2 > 0:
+                rate_r2 = (ab_results["rampion2"]["good"] / total_r2) * 100
+                st.metric("Rampion 2 Preference Rate", f"{rate_r2:.1f}%")
+            
+            st.markdown("---")
+            st.markdown("### Response Times")
+            r2_times = get_response_time_stats("rampion2")
+            pro_times = get_response_time_stats("1.5pro")
+            
+            col3, col4 = st.columns(2)
+            with col3:
+                st.markdown("#### 1.5pro")
+                st.metric("Avg", f"{pro_times['avg']:.3f}s")
+            
+            with col4:
+                st.markdown("#### Rampion 2")
+                st.metric("Avg", f"{r2_times['avg']:.3f}s")
+        except Exception as e:
+            st.warning(f"Could not load stats: {e}")
 
 # -----------------------------------------------------------------------------
 # Constants (keeping UI-related constants)
@@ -166,58 +215,103 @@ def build_question_prompt(question):
     """Direct question prompt - no extra context"""
     return question
 
-def get_response(prompt):
-    """Generate response using jerechat API"""
+def get_response(prompt, model_version):
+    """Generate response using specified model"""
+    start_time = time.time()
+    
     try:
-        response_text = jc.generate_response(prompt, "1.5")
-        # Handle multi-line responses with || separator
+        if model_version == "rampion2":
+            checkpoint_path = st.secrets.get("rampion2_checkpoint_path", "data/save/cb_model/corpus/2-2_500/2000_checkpoint.tar")
+            
+            if 'rampion2_model' not in st.session_state:
+                with st.spinner("Loading Rampion 2 model..."):
+                    searcher, voc = rampion2_model.load_model(checkpoint_path)
+                    if searcher and voc:
+                        st.session_state.rampion2_model = (searcher, voc)
+                    else:
+                        return None, None
+            
+            searcher, voc = st.session_state.rampion2_model
+            normalized_prompt = rampion2_model.normalizeString(prompt)
+            response_text = rampion2_model.generate_response(searcher, voc, normalized_prompt)
+        else:
+            response_text = jc.generate_response(prompt, "1.5")
+        
+        response_time = time.time() - start_time
+        
         response_text = response_text.replace("||", "  \n\n")
-        # Yield chunks of ~30 characters to simulate line-by-line output
-        chunk_size = 30
-        for i in range(0, len(response_text), chunk_size):
-            yield response_text[i:i + chunk_size]
-            time.sleep(0.1)
+        return response_text, response_time
     except Exception as e:
-        error_response = f"Error: {str(e)}. Please rephrase."
-        for i in range(0, len(error_response), chunk_size):
-            yield error_response[i:i + chunk_size]
-            time.sleep(0.1)
+        return None, None
 
 def send_telemetry(**kwargs):
     """Mock telemetry function"""
     pass
 
-def show_feedback_controls(message_index):
-    """Shows the "How did I do?" control."""
+def show_preference_buttons(message_index, left_model, right_model):
+    """Shows preference buttons for side-by-side comparison."""
     st.write("")
     
-    with st.popover("How did I do?"):
-        with st.form(key=f"feedback-{message_index}", border=False):
-            with st.container(gap=None):
-                st.markdown(":small[Rating]")
-                rating = st.feedback(options="stars")
-            
-            details = st.text_area("More information (optional)")
-            
-            if st.checkbox("Include chat history with my feedback", True):
-                relevant_history = st.session_state.messages[:message_index + 1]
-            else:
-                relevant_history = []
-            
-            ""  # Add some space
-            
-            if st.form_submit_button("Send feedback"):
-                # Save feedback to Supabase
-                feedback_type = "good" if rating and rating >= 3 else "bad"
-                chat_history = relevant_history if 'relevant_history' in locals() and relevant_history else []
-                try:
-                    from database import save_feedback
-                    # Get user_id from session state or use anonymous
-                    user_id = st.session_state.active_code.get('code_number', 'anonymous') if 'active_code' in st.session_state and st.session_state.active_code else 'anonymous'
-                    save_feedback(message_index, feedback_type, chat_history, user_id=user_id, details=details)
-                    st.toast("#####  Thank you for your feedback!", icon=":material/sentiment_very_satisfied:", duration="long")
-                except Exception as e:
-                    st.toast(f"Error saving feedback: {e}", icon=":material/error:")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button(f"I prefer this", key=f"prefer-left-{message_index}", use_container_width=True):
+            save_preference(message_index, left_model, right_model)
+            reveal_models(message_index, left_model, right_model)
+    
+    with col2:
+        if st.button(f"I prefer this", key=f"prefer-right-{message_index}", use_container_width=True):
+            save_preference(message_index, right_model, left_model)
+            reveal_models(message_index, right_model, left_model)
+
+def reveal_models(message_index, preferred_model, other_model):
+    """Reveal which models were which after preference is chosen."""
+    st.session_state[f'revealed_{message_index}'] = {
+        'preferred': preferred_model,
+        'other': other_model,
+        'show_only_preferred': True
+    }
+
+def save_preference(message_index, preferred_model, other_model):
+    """Save user preference to Supabase and update chat history."""
+    try:
+        user_id = st.session_state.active_code.get('code_number', 'anonymous') if 'active_code' in st.session_state and st.session_state.active_code else 'anonymous'
+        chat_history = st.session_state.messages[:message_index + 1] if 'messages' in st.session_state else []
+        
+        # Get response times from session state
+        response_times = st.session_state.get(f'response_times_{message_index}', {})
+        
+        save_preference_feedback(
+            message_index=message_index,
+            preferred_model=preferred_model,
+            other_model=other_model,
+            chat_history=chat_history,
+            user_id=user_id,
+            response_times=response_times
+        )
+        st.toast(f"#####  You preferred {preferred_model}!", icon=":material/sentiment_very_satisfied:", duration="long")
+        
+        # Update chat history to only show preferred response
+        if message_index < len(st.session_state.messages):
+            message = st.session_state.messages[message_index]
+            if message["role"] == "assistant":
+                left_model, right_model = message.get("model_order", (None, None))
+                left_response = message.get("left_response", "")
+                right_response = message.get("right_response", "")
+                
+                # Keep only the preferred response
+                preferred_response = left_response if preferred_model == left_model else right_response
+                
+                # Update the message to show only preferred response
+                st.session_state.messages[message_index] = {
+                    "role": "assistant",
+                    "content": preferred_response,
+                    "model": preferred_model,
+                    "was_comparison": True,
+                    "other_model": other_model
+                }
+    except Exception as e:
+        st.toast(f"Error saving preference: {e}", icon=":material/error:")
 
 @st.dialog("Disclaimer")
 def show_disclaimer_dialog():
@@ -267,15 +361,6 @@ if not user_first_interaction and not has_message_history:
     
     with st.container():
         st.chat_input("Ask a question...", key="initial_question")
-        selected_model = st.pills(
-            label="Models",
-            label_visibility="collapsed",
-            options=[
-                ":material/neurology: DeepThink(Rampion 2)",
-            ],
-            key="selected_model",
-            disabled=True,
-        )
 
         selected_suggestion = st.pills(
             label="Examples",
@@ -316,18 +401,63 @@ if "messages" not in st.session_state:
 
 # Display chat messages from history as speech bubbles.
 for i, message in enumerate(st.session_state.messages):
-    with st.chat_message(message["role"]):
-        if message["role"] == "assistant":
-            st.container()  # Fix ghost message bug
-        
-        # Handle multi-line responses with || separator
-        content = message["content"]
-        if "||" in content and message["role"] == "assistant":
-            content = content.replace("||", "  \n\n")
-        st.markdown(content)
-        
-        if message["role"] == "assistant":
-            show_feedback_controls(i)
+    if message["role"] == "user":
+        with st.chat_message("user"):
+            st.text(message["content"])
+    elif message["role"] == "assistant":
+        # Check if this is a comparison message (before preference) or preferred-only (after preference)
+        if "model_order" in message:
+            # This is a comparison message
+            left_model, right_model = message.get("model_order", ab_testing.get_model_order())
+            left_response = message.get("left_response", "")
+            right_response = message.get("right_response", "")
+            
+            # Check if models have been revealed
+            revealed = st.session_state.get(f'revealed_{i}', None)
+            
+            # If preference made, only show preferred response
+            if revealed and revealed.get('show_only_preferred'):
+                with st.chat_message("assistant"):
+                    st.markdown(f"**{revealed['preferred']}**")
+                    
+                    # Show the preferred response
+                    if revealed['preferred'] == left_model:
+                        st.markdown(left_response)
+                    else:
+                        st.markdown(right_response)
+                    
+                    st.info(f"You preferred {revealed['preferred']} over {revealed['other']}")
+            else:
+                # Show both responses side-by-side
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if revealed:
+                        st.markdown(f"**{left_model}**")
+                    else:
+                        st.markdown("**Model A**")
+                    st.markdown(left_response)
+                
+                with col2:
+                    if revealed:
+                        st.markdown(f"**{right_model}**")
+                    else:
+                        st.markdown("**Model B**")
+                    st.markdown(right_response)
+                
+                # Show preference buttons (only if not yet revealed)
+                if not revealed:
+                    show_preference_buttons(i, left_model, right_model)
+        else:
+            # This is a preferred-only message (after preference was made)
+            with st.chat_message("assistant"):
+                model_name = message.get("model", "Unknown")
+                st.markdown(f"**{model_name}**")
+                st.markdown(message["content"])
+                
+                if message.get("was_comparison"):
+                    other_model = message.get("other_model", "")
+                    st.info(f"You preferred {model_name} over {other_model}")
 
 if user_message:
     # When the user posts a message...
@@ -335,35 +465,46 @@ if user_message:
     # Streamlit's Markdown engine interprets "$" as LaTeX code
     user_message = user_message.replace("$", r"\$")
     
-    # Display message as a speech bubble.
+    # Get random model order for this comparison
+    left_model, right_model = ab_testing.get_model_order()
+    
+    # Display user message
     with st.chat_message("user"):
         st.text(user_message)
     
-    # Display assistant response as a speech bubble.
-    with st.chat_message("assistant"):
-        # Build a detailed prompt.
-        if DEBUG_MODE:
-            with st.status("Computing prompt...") as status:
-                full_prompt = build_question_prompt(user_message)
-                st.code(full_prompt)
-                status.update(label="Prompt computed")
-        else:
-            full_prompt = build_question_prompt(user_message)
+    # Generate responses from both models
+    with st.spinner("Thinking..."):
+        left_response, left_time = get_response(user_message, left_model)
+        right_response, right_time = get_response(user_message, right_model)
         
-        # Send prompt to echo function.
-        with st.spinner("Thinking..."):
-            time.sleep(1)
-            response_gen = get_response(full_prompt)
-        
-        # Put everything after the spinners in a container to fix the
-        # ghost message bug.
-        with st.container():
-            # Stream the response.
-            response = st.write_stream(response_gen)
-            
-            # Add messages to chat history.
-            st.session_state.messages.append({"role": "user", "content": user_message})
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            
-            # Other stuff.
-            show_feedback_controls(len(st.session_state.messages) - 1)
+        # Store response times
+        st.session_state[f'response_times_{len(st.session_state.messages)}'] = {
+            left_model: left_time,
+            right_model: right_time
+        }
+    
+    # Display side-by-side comparison
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Model A**")
+        st.markdown(left_response)
+    
+    with col2:
+        st.markdown("**Model B**")
+        st.markdown(right_response)
+    
+    # Add to chat history
+    st.session_state.messages.append({
+        "role": "user",
+        "content": user_message
+    })
+    st.session_state.messages.append({
+        "role": "assistant",
+        "model_order": (left_model, right_model),
+        "left_response": left_response,
+        "right_response": right_response
+    })
+    
+    # Show preference buttons
+    show_preference_buttons(len(st.session_state.messages) - 1, left_model, right_model)
