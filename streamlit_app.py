@@ -251,6 +251,20 @@ def send_telemetry(**kwargs):
 # -----------------------------------------------------------------------------
 # UI rendering helpers (to simplify duplicate rendering logic)
 
+def get_user_id() -> str:
+    """Return the current user's id from session state or 'anonymous'."""
+    return (
+        st.session_state.active_code.get('code_number', 'anonymous')
+        if 'active_code' in st.session_state and st.session_state.active_code
+        else 'anonymous'
+    )
+
+
+def get_response_times(message_index: int) -> Dict[str, float]:
+    """Return response times dict for a given message index from session state."""
+    return st.session_state.get(f'response_times_{message_index}', {})
+
+
 def render_user_message(content: str) -> None:
     """Render a user message bubble."""
     with st.chat_message("user"):
@@ -380,11 +394,11 @@ def reveal_models(message_index, preferred_model, other_model):
 def save_preference(message_index, preferred_model, other_model):
     """Save user preference to Supabase and update chat history."""
     try:
-        user_id = st.session_state.active_code.get('code_number', 'anonymous') if 'active_code' in st.session_state and st.session_state.active_code else 'anonymous'
+        user_id = get_user_id()
         chat_history = st.session_state.messages[:message_index + 1] if 'messages' in st.session_state else []
         
         # Get response times from session state
-        response_times = st.session_state.get(f'response_times_{message_index}', {})
+        response_times = get_response_times(message_index)
         
         save_preference_feedback(
             message_index=message_index,
@@ -531,6 +545,14 @@ if user_message:
             left_model: left_time,
             right_model: right_time
         }
+
+    # Handle timeouts or errors by notifying user and preventing None rendering
+    if left_response is None:
+        st.error("Model request timed out.")
+        left_response = ""
+    if right_response is None:
+        st.error("Model request timed out.")
+        right_response = ""
     
     # Display side-by-side comparison (before reveal)
     render_comparison_message(
