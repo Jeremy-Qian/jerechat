@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
 from jerechat import ab_testing, rampion2_model
 from database import save_preference_feedback, save_original_feedback, get_ab_test_results, get_response_time_stats
-from constants import MODEL_15PRO, MODEL_RAMPION2, DEFAULT_CHECKPOINT_PATH, SUGGESTIONS
+from constants import MODEL_15PRO, MODEL_RAMPION2, MODEL_15PRO_DISPLAY, MODEL_RAMPION2_DISPLAY, DEFAULT_CHECKPOINT_PATH, SUGGESTIONS
 
 st.set_page_config(
     page_title="JereChat", 
@@ -135,12 +135,12 @@ with st.sidebar:
             
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("#### 1.5pro")
+                st.markdown(f"#### {MODEL_15PRO_DISPLAY}")
                 st.metric("👍 Preferred", ab_results[MODEL_15PRO]["good"])
                 st.metric("👎 Not Preferred", ab_results[MODEL_15PRO]["bad"])
             
             with col2:
-                st.markdown("#### Rampion 2")
+                st.markdown(f"#### {MODEL_RAMPION2_DISPLAY}")
                 st.metric("👍 Preferred", ab_results[MODEL_RAMPION2]["good"])
                 st.metric("👎 Not Preferred", ab_results[MODEL_RAMPION2]["bad"])
             
@@ -150,11 +150,11 @@ with st.sidebar:
             
             if total_15pro > 0:
                 rate_15pro = (ab_results[MODEL_15PRO]["good"] / total_15pro) * 100
-                st.metric("1.5pro Preference Rate", f"{rate_15pro:.1f}%")
+                st.metric(f"{MODEL_15PRO_DISPLAY} Preference Rate", f"{rate_15pro:.1f}%")
             
             if total_r2 > 0:
                 rate_r2 = (ab_results[MODEL_RAMPION2]["good"] / total_r2) * 100
-                st.metric("Rampion 2 Preference Rate", f"{rate_r2:.1f}%")
+                st.metric(f"{MODEL_RAMPION2_DISPLAY} Preference Rate", f"{rate_r2:.1f}%")
             
             st.markdown("---")
             st.markdown("### Response Times")
@@ -163,11 +163,11 @@ with st.sidebar:
             
             col3, col4 = st.columns(2)
             with col3:
-                st.markdown("#### 1.5pro")
+                st.markdown(f"#### {MODEL_15PRO_DISPLAY}")
                 st.metric("Avg", f"{pro_times['avg']:.3f}s")
             
             with col4:
-                st.markdown("#### Rampion 2")
+                st.markdown(f"#### {MODEL_RAMPION2_DISPLAY}")
                 st.metric("Avg", f"{r2_times['avg']:.3f}s")
         except Exception as e:
             st.warning(f"Could not load stats: {e}")
@@ -234,6 +234,15 @@ def send_telemetry(**kwargs):
 # -----------------------------------------------------------------------------
 # UI rendering helpers (to simplify duplicate rendering logic)
 
+def get_model_display_name(model_id: str) -> str:
+    """Convert model identifier to display name for UI."""
+    if model_id == MODEL_15PRO:
+        return MODEL_15PRO_DISPLAY
+    elif model_id == MODEL_RAMPION2:
+        return MODEL_RAMPION2_DISPLAY
+    return model_id
+
+
 def get_user_id() -> str:
     """Return the current user's id from session state or 'anonymous'."""
     return (
@@ -257,11 +266,11 @@ def render_user_message(content: str) -> None:
 def render_preferred_message(message: Dict[str, Any]) -> None:
     """Render a previously preferred single-model assistant message."""
     with st.chat_message("assistant"):
-        model_name = message.get("model", "Unknown")
+        model_name = get_model_display_name(message.get("model", "Unknown"))
         st.markdown(f"**{model_name}**")
         st.markdown(message.get("content", ""))
         if message.get("was_comparison"):
-            other_model = message.get("other_model", "")
+            other_model = get_model_display_name(message.get("other_model", ""))
             st.info(f"You preferred {model_name} over {other_model}")
 
 
@@ -279,22 +288,26 @@ def render_comparison_message(
     # If a preference was made, show only the preferred side
     if revealed and revealed.get("show_only_preferred"):
         with st.chat_message("assistant"):
-            st.markdown(f"**{revealed['preferred']}**")
+            preferred_display = get_model_display_name(revealed['preferred'])
+            other_display = get_model_display_name(revealed['other'])
+            st.markdown(f"**{preferred_display}**")
             if revealed["preferred"] == left_model:
                 st.markdown(left_response)
             else:
                 st.markdown(right_response)
-            st.info(f"You preferred {revealed['preferred']} over {revealed['other']}")
+            st.info(f"You preferred {preferred_display} over {other_display}")
         return
 
     # Otherwise show both sides, masking model names if not yet revealed
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"**{left_model}**" if revealed else "**Model A**")
+        left_display = get_model_display_name(left_model) if revealed else "Model A"
+        st.markdown(f"**{left_display}**")
         st.markdown(left_response)
 
     with col2:
-        st.markdown(f"**{right_model}**" if revealed else "**Model B**")
+        right_display = get_model_display_name(right_model) if revealed else "Model B"
+        st.markdown(f"**{right_display}**")
         st.markdown(right_response)
 
     # Show preference buttons only when not yet revealed and enabled
