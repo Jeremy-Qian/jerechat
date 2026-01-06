@@ -327,4 +327,4 @@ print(get_response_time_stats())
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the Apache License 2.0.
