@@ -1,11 +1,7 @@
 import streamlit as st
 import datetime
-import textwrap
-from collections import namedtuple
 import time
 import jerechat as jc
-from streamlit.runtime.scriptrunner import RerunException
-from streamlit.runtime.scriptrunner import StopException
 from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
 from jerechat import ab_testing, rampion2_model
@@ -177,26 +173,8 @@ with st.sidebar:
 HISTORY_LENGTH = 5
 DEBUG_MODE = st.query_params.get("debug", "false").lower() == "true"
 
-CORTEX_URL = (
-    "https://docs.snowflake.com/en/guides-overview-ai-features"
-    "?utm_source=streamlit"
-    "&utm_medium=referral"
-    "&utm_campaign=streamlit-demo-apps"
-    "&utm_content=streamlit-assistant"
-)
-
-GITHUB_URL = "https://github.com/streamlit/streamlit-assistant"
-
-# Helper objects
-TaskInfo = namedtuple("TaskInfo", ["name", "function", "args"])
-TaskResult = namedtuple("TaskResult", ["name", "result"])
-
 # -----------------------------------------------------------------------------
-# Simplified functions (without AI/Snowflake dependencies)
-
-def build_question_prompt(question):
-    """Direct question prompt - no extra context"""
-    return question
+# Model response generation
 
 def get_response(prompt, model_version):
     """Generate response using specified model"""
@@ -226,10 +204,6 @@ def get_response(prompt, model_version):
         return response_text, response_time
     except Exception as e:
         return None, None
-
-def send_telemetry(**kwargs):
-    """Mock telemetry function"""
-    pass
 
 # -----------------------------------------------------------------------------
 # UI rendering helpers (to simplify duplicate rendering logic)
