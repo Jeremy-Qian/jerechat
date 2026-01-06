@@ -287,5 +287,5 @@ def get_response_time_stats(model_version: Optional[str] = None) -> Dict[str, fl
         st.error(f"Failed to get response time stats: {e}")
         return {"avg": 0.0, "min": 0.0, "max": 0.0}
 
-# Explicitly export functions for clarity
-__all__ = ['save_feedback', 'get_feedback_stats', 'get_model_feedback_stats', 'get_ab_test_results', 'get_response_time_stats']
+# Explicitly export functions for clarity (exclude deprecated save_feedback)
+__all__ = ['get_feedback_stats', 'get_model_feedback_stats', 'get_ab_test_results', 'get_response_time_stats', 'save_original_feedback', 'save_preference_feedback']

@@ -248,6 +248,78 @@ def send_telemetry(**kwargs):
     """Mock telemetry function"""
     pass
 
+# -----------------------------------------------------------------------------
+# UI rendering helpers (to simplify duplicate rendering logic)
+
+def render_user_message(content: str) -> None:
+    """Render a user message bubble."""
+    with st.chat_message("user"):
+        st.text(content)
+
+
+def render_preferred_message(message: Dict[str, Any]) -> None:
+    """Render a previously preferred single-model assistant message."""
+    with st.chat_message("assistant"):
+        model_name = message.get("model", "Unknown")
+        st.markdown(f"**{model_name}**")
+        st.markdown(message.get("content", ""))
+        if message.get("was_comparison"):
+            other_model = message.get("other_model", "")
+            st.info(f"You preferred {model_name} over {other_model}")
+
+
+def render_comparison_message(
+    index: int,
+    left_model: str,
+    right_model: str,
+    left_response: str,
+    right_response: str,
+    show_buttons: bool = True,
+) -> None:
+    """Render side-by-side assistant responses. Labels are hidden until reveal."""
+    revealed = st.session_state.get(f"revealed_{index}", None)
+
+    # If a preference was made, show only the preferred side
+    if revealed and revealed.get("show_only_preferred"):
+        with st.chat_message("assistant"):
+            st.markdown(f"**{revealed['preferred']}**")
+            if revealed["preferred"] == left_model:
+                st.markdown(left_response)
+            else:
+                st.markdown(right_response)
+            st.info(f"You preferred {revealed['preferred']} over {revealed['other']}")
+        return
+
+    # Otherwise show both sides, masking model names if not yet revealed
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"**{left_model}**" if revealed else "**Model A**")
+        st.markdown(left_response)
+
+    with col2:
+        st.markdown(f"**{right_model}**" if revealed else "**Model B**")
+        st.markdown(right_response)
+
+    # Show preference buttons only when not yet revealed and enabled
+    if not revealed and show_buttons:
+        show_preference_buttons(index, left_model, right_model)
+
+
+def render_history_message(index: int, message: Dict[str, Any]) -> None:
+    """Render a single message from chat history based on its role/type."""
+    if message["role"] == "user":
+        render_user_message(message.get("content", ""))
+        return
+
+    # Assistant messages can be either comparison or preferred-only
+    if "model_order" in message:
+        left_model, right_model = message.get("model_order", ab_testing.get_model_order())
+        left_response = message.get("left_response", "")
+        right_response = message.get("right_response", "")
+        render_comparison_message(index, left_model, right_model, left_response, right_response)
+    else:
+        render_preferred_message(message)
+
 # ORIGINAL FEEDBACK CONTROLS (commented out, kept for reference)
 # def show_feedback_controls(message_index):
 #     """Shows the "How did I do?" control."""
@@ -434,63 +506,7 @@ if "messages" not in st.session_state:
 
 # Display chat messages from history as speech bubbles.
 for i, message in enumerate(st.session_state.messages):
-    if message["role"] == "user":
-        with st.chat_message("user"):
-            st.text(message["content"])
-    elif message["role"] == "assistant":
-        # Check if this is a comparison message (before preference) or preferred-only (after preference)
-        if "model_order" in message:
-            # This is a comparison message
-            left_model, right_model = message.get("model_order", ab_testing.get_model_order())
-            left_response = message.get("left_response", "")
-            right_response = message.get("right_response", "")
-            
-            # Check if models have been revealed
-            revealed = st.session_state.get(f'revealed_{i}', None)
-            
-            # If preference made, only show preferred response
-            if revealed and revealed.get('show_only_preferred'):
-                with st.chat_message("assistant"):
-                    st.markdown(f"**{revealed['preferred']}**")
-                    
-                    # Show the preferred response
-                    if revealed['preferred'] == left_model:
-                        st.markdown(left_response)
-                    else:
-                        st.markdown(right_response)
-                    
-                    st.info(f"You preferred {revealed['preferred']} over {revealed['other']}")
-            else:
-                # Show both responses side-by-side
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    if revealed:
-                        st.markdown(f"**{left_model}**")
-                    else:
-                        st.markdown("**Model A**")
-                    st.markdown(left_response)
-                
-                with col2:
-                    if revealed:
-                        st.markdown(f"**{right_model}**")
-                    else:
-                        st.markdown("**Model B**")
-                    st.markdown(right_response)
-                
-                # Show preference buttons (only if not yet revealed)
-                if not revealed:
-                    show_preference_buttons(i, left_model, right_model)
-        else:
-            # This is a preferred-only message (after preference was made)
-            with st.chat_message("assistant"):
-                model_name = message.get("model", "Unknown")
-                st.markdown(f"**{model_name}**")
-                st.markdown(message["content"])
-                
-                if message.get("was_comparison"):
-                    other_model = message.get("other_model", "")
-                    st.info(f"You preferred {model_name} over {other_model}")
+    render_history_message(i, message)
 
 if user_message:
     # When the user posts a message...
@@ -516,16 +532,15 @@ if user_message:
             right_model: right_time
         }
     
-    # Display side-by-side comparison
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**Model A**")
-        st.markdown(left_response)
-    
-    with col2:
-        st.markdown("**Model B**")
-        st.markdown(right_response)
+    # Display side-by-side comparison (before reveal)
+    render_comparison_message(
+        index=len(st.session_state.messages) + 1,  # temporary index for UI before append
+        left_model=left_model,
+        right_model=right_model,
+        left_response=left_response,
+        right_response=right_response,
+        show_buttons=False,
+    )
     
     # Add to chat history
     st.session_state.messages.append({
