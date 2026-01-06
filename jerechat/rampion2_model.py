@@ -3,11 +3,8 @@ import torch.nn as nn
 import os
 import re
 import streamlit as st
+from constants import PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, MAX_LENGTH
 
-PAD_token = 0
-SOS_token = 1
-EOS_token = 2
-MAX_LENGTH = 10
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -17,7 +14,7 @@ class Voc:
         self.trimmed = False
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {PAD_token: "PAD", SOS_token: "SOS", EOS_token: "EOS"}
+        self.index2word = {PAD_TOKEN: "PAD", SOS_TOKEN: "SOS", EOS_TOKEN: "EOS"}
         self.num_words = 3
 
     def addSentence(self, sentence):

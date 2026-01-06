@@ -1,6 +1,7 @@
 import random
 import streamlit as st
 from datetime import datetime
+from constants import MODEL_15PRO, MODEL_RAMPION2
 
 
 def get_random_model_order():
@@ -8,9 +9,9 @@ def get_random_model_order():
     Get random order for displaying models in side-by-side comparison.
     
     Returns:
-        tuple: (left_model, right_model) where each is either "1.5pro" or "rampion2"
+        tuple: (left_model, right_model) where each is either MODEL_15PRO or MODEL_RAMPION2
     """
-    models = ["1.5pro", "rampion2"]
+    models = [MODEL_15PRO, MODEL_RAMPION2]
     random.shuffle(models)
     return models[0], models[1]
 

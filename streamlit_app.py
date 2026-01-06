@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from supabase import Client, create_client
 from jerechat import ab_testing, rampion2_model
 from database import save_preference_feedback, save_original_feedback, get_ab_test_results, get_response_time_stats
+from constants import MODEL_15PRO, MODEL_RAMPION2, DEFAULT_CHECKPOINT_PATH, SUGGESTIONS
 
 st.set_page_config(
     page_title="JereChat", 
@@ -135,30 +136,30 @@ with st.sidebar:
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("#### 1.5pro")
-                st.metric("👍 Preferred", ab_results["1.5pro"]["good"])
-                st.metric("👎 Not Preferred", ab_results["1.5pro"]["bad"])
+                st.metric("👍 Preferred", ab_results[MODEL_15PRO]["good"])
+                st.metric("👎 Not Preferred", ab_results[MODEL_15PRO]["bad"])
             
             with col2:
                 st.markdown("#### Rampion 2")
-                st.metric("👍 Preferred", ab_results["rampion2"]["good"])
-                st.metric("👎 Not Preferred", ab_results["rampion2"]["bad"])
+                st.metric("👍 Preferred", ab_results[MODEL_RAMPION2]["good"])
+                st.metric("👎 Not Preferred", ab_results[MODEL_RAMPION2]["bad"])
             
             # Calculate preference rate
-            total_15pro = ab_results["1.5pro"]["good"] + ab_results["1.5pro"]["bad"]
-            total_r2 = ab_results["rampion2"]["good"] + ab_results["rampion2"]["bad"]
+            total_15pro = ab_results[MODEL_15PRO]["good"] + ab_results[MODEL_15PRO]["bad"]
+            total_r2 = ab_results[MODEL_RAMPION2]["good"] + ab_results[MODEL_RAMPION2]["bad"]
             
             if total_15pro > 0:
-                rate_15pro = (ab_results["1.5pro"]["good"] / total_15pro) * 100
+                rate_15pro = (ab_results[MODEL_15PRO]["good"] / total_15pro) * 100
                 st.metric("1.5pro Preference Rate", f"{rate_15pro:.1f}%")
             
             if total_r2 > 0:
-                rate_r2 = (ab_results["rampion2"]["good"] / total_r2) * 100
+                rate_r2 = (ab_results[MODEL_RAMPION2]["good"] / total_r2) * 100
                 st.metric("Rampion 2 Preference Rate", f"{rate_r2:.1f}%")
             
             st.markdown("---")
             st.markdown("### Response Times")
-            r2_times = get_response_time_stats("rampion2")
-            pro_times = get_response_time_stats("1.5pro")
+            r2_times = get_response_time_stats(MODEL_RAMPION2)
+            pro_times = get_response_time_stats(MODEL_15PRO)
             
             col3, col4 = st.columns(2)
             with col3:
@@ -186,24 +187,6 @@ CORTEX_URL = (
 
 GITHUB_URL = "https://github.com/streamlit/streamlit-assistant"
 
-SUGGESTIONS = {
-    ":blue[:material/door_open:] Knock Knock!": (
-        "Play Knock Knock"
-    ),
-    ":green[:material/sentiment_very_satisfied:] Tell a joke": (
-        "Tell a joke"
-    ),
-    ":orange[:material/draft:] Write an essay": (
-        "Write an essay"
-    ),
-    ":violet[:material/code:] Write some code": (
-        "Write some code"
-    ),
-    ":red[:material/skillet:] Cook JereChat": (
-        "I'm gonna cook you"
-    ),
-}
-
 # Helper objects
 TaskInfo = namedtuple("TaskInfo", ["name", "function", "args"])
 TaskResult = namedtuple("TaskResult", ["name", "result"])
@@ -220,8 +203,8 @@ def get_response(prompt, model_version):
     start_time = time.time()
     
     try:
-        if model_version == "rampion2":
-            checkpoint_path = st.secrets.get("rampion2_checkpoint_path", "data/save/cb_model/corpus/2-2_500/2000_checkpoint.tar")
+        if model_version == MODEL_RAMPION2:
+            checkpoint_path = st.secrets.get("rampion2_checkpoint_path", DEFAULT_CHECKPOINT_PATH)
             
             if 'rampion2_model' not in st.session_state:
                 with st.spinner("Loading Rampion 2 model..."):

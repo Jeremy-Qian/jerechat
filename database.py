@@ -3,6 +3,7 @@ import datetime
 
 import streamlit as st
 from supabase import Client, create_client
+from constants import MODEL_15PRO, MODEL_RAMPION2
 
 # Initialize Supabase client with error handling
 supabase: Optional[Client] = None
@@ -245,8 +246,8 @@ def get_ab_test_results() -> Dict[str, Dict[str, int]]:
         Dictionary with feedback stats for each model version
     """
     return {
-        "1.5pro": get_model_feedback_stats("1.5pro"),
-        "rampion2": get_model_feedback_stats("rampion2"),
+        MODEL_15PRO: get_model_feedback_stats(MODEL_15PRO),
+        MODEL_RAMPION2: get_model_feedback_stats(MODEL_RAMPION2),
     }
 
 def get_response_time_stats(model_version: Optional[str] = None) -> Dict[str, float]:
