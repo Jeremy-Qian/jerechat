@@ -5,7 +5,7 @@ MODEL_15PRO = "1.5pro"
 MODEL_RAMPION2 = "rampion2"
 
 # Display names (for UI presentation)
-MODEL_15PRO_DISPLAY = "JereChat 1.5"
+MODEL_15PRO_DISPLAY = "JereChat 1.5 Pro"
 MODEL_RAMPION2_DISPLAY = "JereChat R2"
 
 # Rampion 2 model checkpoint path
