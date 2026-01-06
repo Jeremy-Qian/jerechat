@@ -124,7 +124,7 @@ class GreedySearchDecoder(nn.Module):
     def forward(self, input_seq, input_length, max_length):
         encoder_outputs, encoder_hidden = self.encoder(input_seq, input_length)
         decoder_hidden = encoder_hidden[:self.decoder.n_layers]
-        decoder_input = torch.ones(1, 1, device=device, dtype=torch.long) * SOS_token
+        decoder_input = torch.ones(1, 1, device=device, dtype=torch.long) * SOS_TOKEN
         all_tokens = torch.zeros([0], device=device, dtype=torch.long)
         all_scores = torch.zeros([0], device=device)
         for _ in range(max_length):
@@ -144,7 +144,7 @@ def normalizeString(s):
 
 
 def indexesFromSentence(voc, sentence):
-    return [voc.word2index[word] for word in sentence.split(' ') if word in voc.word2index] + [EOS_token]
+    return [voc.word2index[word] for word in sentence.split(' ') if word in voc.word2index] + [EOS_TOKEN]
 
 
 def load_model(checkpoint_path):
