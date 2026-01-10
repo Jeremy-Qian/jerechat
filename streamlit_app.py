@@ -369,6 +369,7 @@ def reveal_models(message_index, preferred_model, other_model):
         'other': other_model,
         'show_only_preferred': True
     }
+    st.rerun()
 
 def save_preference(message_index, preferred_model, other_model):
     """Save user preference to Supabase and update chat history."""
