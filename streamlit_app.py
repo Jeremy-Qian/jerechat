@@ -245,7 +245,7 @@ def render_preferred_message(message: Dict[str, Any]) -> None:
         st.markdown(message.get("content", ""))
         if message.get("was_comparison"):
             other_model = get_model_display_name(message.get("other_model", ""))
-            st.info(f"You preferred {model_name} over {other_model}")
+            st.info(f"You liked {model_name} over {other_model}")
 
 
 def render_comparison_message(
@@ -269,7 +269,7 @@ def render_comparison_message(
                 st.markdown(left_response)
             else:
                 st.markdown(right_response)
-            st.info(f"You preferred {preferred_display} over {other_display}")
+            st.info(f"You liked {preferred_display} over {other_display}")
         return
 
     # Otherwise show both sides, masking model names if not yet revealed
@@ -344,12 +344,12 @@ def show_preference_buttons(message_index, left_model, right_model):
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button(f"I prefer this", key=f"prefer-left-{message_index}", use_container_width=True):
+        if st.button(f"left is better", key=f"prefer-left-{message_index}", use_container_width=True):
             save_preference(message_index, left_model, right_model)
             reveal_models(message_index, left_model, right_model)
     
     with col2:
-        if st.button(f"I prefer this", key=f"prefer-right-{message_index}", use_container_width=True):
+        if st.button(f"right is better", key=f"prefer-right-{message_index}", use_container_width=True):
             save_preference(message_index, right_model, left_model)
             reveal_models(message_index, right_model, left_model)
 
@@ -378,7 +378,8 @@ def save_preference(message_index, preferred_model, other_model):
             user_id=user_id,
             response_times=response_times
         )
-        st.toast(f"#####  You preferred {preferred_model}!", icon=":material/sentiment_very_satisfied:", duration="long")
+        preferred_display = get_model_display_name(preferred_model)
+        st.toast(f"#####  You liked {preferred_display}!", icon=":material/sentiment_very_satisfied:", duration="long")
         
         # Update chat history to only show preferred response
         if message_index < len(st.session_state.messages):
