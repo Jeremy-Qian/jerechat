@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import datetime
 import time
 import jerechat as jc
@@ -12,6 +13,14 @@ st.set_page_config(
     page_title="JereChat", 
     page_icon="✨",
     initial_sidebar_state="expanded"
+)
+
+# Inject Umami analytics tracking script into header
+components.html(
+    """
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="d379691d-8995-4876-ba0c-e885d7921f03"></script>
+    """,
+    height=0
 )
 
 def check_invitation_code():
