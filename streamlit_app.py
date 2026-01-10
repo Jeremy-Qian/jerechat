@@ -18,7 +18,7 @@ st.set_page_config(
 # Inject Umami analytics tracking script into header
 components.html(
     """
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="d379691d-8995-4876-ba0c-e885d7921f03"></script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="f401341a-02f5-49e7-a16a-145dd36cec93"></script>
     """,
     height=0
 )
