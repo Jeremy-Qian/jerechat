@@ -248,7 +248,7 @@ def render_user_message(content: str) -> None:
 
 def render_preferred_message(message: Dict[str, Any]) -> None:
     """Render a previously preferred single-model assistant message."""
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
         model_name = get_model_display_name(message.get("model", "Unknown"))
         st.markdown(f"**{model_name}**")
         st.markdown(message.get("content", ""))
@@ -267,7 +267,7 @@ def render_comparison_message(
 
     # If a preference was made, show only the preferred side
     if revealed and revealed.get("show_only_preferred"):
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
             preferred_display = get_model_display_name(revealed['preferred'])
             other_display = get_model_display_name(revealed['other'])
             st.markdown(f"**{preferred_display}**")
@@ -281,14 +281,16 @@ def render_comparison_message(
     # Otherwise show both sides, masking model names if not yet revealed
     col1, col2 = st.columns(2)
     with col1:
-        left_display = get_model_display_name(left_model) if revealed else "Model A"
-        st.markdown(f"**{left_display}**")
-        st.markdown(left_response)
+        with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
+            left_display = get_model_display_name(left_model) if revealed else "Model A"
+            st.markdown(f"**{left_display}**")
+            st.markdown(left_response)
 
     with col2:
-        right_display = get_model_display_name(right_model) if revealed else "Model B"
-        st.markdown(f"**{right_display}**")
-        st.markdown(right_response)
+        with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
+            right_display = get_model_display_name(right_model) if revealed else "Model B"
+            st.markdown(f"**{right_display}**")
+            st.markdown(right_response)
 
     # Show preference buttons only when not yet revealed and enabled
     if not revealed and show_buttons:
