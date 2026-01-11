@@ -319,7 +319,6 @@ def render_comparison_message(
                 st.markdown(left_response)
             else:
                 st.markdown(right_response)
-            st.info(f"You liked {preferred_display} over {other_display}")
         return
 
     # Otherwise show both sides, masking model names if not yet revealed
