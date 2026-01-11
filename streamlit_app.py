@@ -252,9 +252,6 @@ def render_preferred_message(message: Dict[str, Any]) -> None:
         model_name = get_model_display_name(message.get("model", "Unknown"))
         st.markdown(f"**{model_name}**")
         st.markdown(message.get("content", ""))
-        if message.get("was_comparison"):
-            other_model = get_model_display_name(message.get("other_model", ""))
-            st.info(f"You liked {model_name} over {other_model}")
 
 
 def render_comparison_message(
