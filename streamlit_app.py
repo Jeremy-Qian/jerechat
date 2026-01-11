@@ -15,6 +15,43 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Add smooth transitions CSS
+st.markdown("""
+<style>
+/* Smooth transitions for preference selection */
+.preference-container {
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.preference-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.preference-button {
+    transition: all 0.2s ease;
+}
+
+.preference-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Smooth fade for model reveal */
+.model-reveal {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hide running indicator during preference selection */
+.stStatusContainer { display: none; }
+</style>
+""", unsafe_allow_html=True)
+
 # Inject Umami analytics tracking script into header
 components.html(
     """
@@ -264,9 +301,16 @@ def render_comparison_message(
 ) -> None:
     """Render side-by-side assistant responses. Labels are hidden until reveal."""
     revealed = st.session_state.get(f"revealed_{index}", None)
+    
+    # Check if this message is being processed
+    processing_key = f'processing_{index}'
+    is_processing = st.session_state.get(processing_key, False)
 
     # If a preference was made, show only the preferred side
     if revealed and revealed.get("show_only_preferred"):
+        # Add smooth transition class
+        transition_class = "model-reveal" if not is_processing else "preference-loading"
+        
         with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
             preferred_display = get_model_display_name(revealed['preferred'])
             other_display = get_model_display_name(revealed['other'])
@@ -279,6 +323,11 @@ def render_comparison_message(
         return
 
     # Otherwise show both sides, masking model names if not yet revealed
+    # Add processing state to container
+    container_class = "preference-loading" if is_processing else "preference-container"
+    
+    st.markdown(f'<div class="{container_class}">', unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
     with col1:
         with st.chat_message("assistant", avatar="data/resources/icon_small.png"):
@@ -291,6 +340,8 @@ def render_comparison_message(
             right_display = get_model_display_name(right_model) if revealed else "Model B"
             st.markdown(f"**{right_display}**")
             st.markdown(right_response)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Show preference buttons only when not yet revealed and enabled
     if not revealed and show_buttons:
@@ -349,17 +400,109 @@ def show_preference_buttons(message_index, left_model, right_model):
     """Shows preference buttons for side-by-side comparison."""
     st.write("")
     
+    # Check if this preference is currently being processed
+    processing_key = f'processing_{message_index}'
+    is_processing = st.session_state.get(processing_key, False)
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button(f"left is better", key=f"prefer-left-{message_index}", use_container_width=True):
-            save_preference(message_index, left_model, right_model)
-            reveal_models(message_index, left_model, right_model)
+        # Disable button during processing and show loading state
+        button_disabled = is_processing
+        button_help = "Processing..." if is_processing else ""
+        
+        if st.button(
+            f"left is better", 
+            key=f"prefer-left-{message_index}", 
+            use_container_width=True,
+            disabled=button_disabled,
+            help=button_help
+        ):
+            # Set processing state immediately
+            st.session_state[processing_key] = True
+            # Batch all operations
+            save_preference_smooth(message_index, left_model, right_model)
     
     with col2:
-        if st.button(f"right is better", key=f"prefer-right-{message_index}", use_container_width=True):
-            save_preference(message_index, right_model, left_model)
-            reveal_models(message_index, right_model, left_model)
+        # Disable button during processing and show loading state
+        button_disabled = is_processing
+        button_help = "Processing..." if is_processing else ""
+        
+        if st.button(
+            f"right is better", 
+            key=f"prefer-right-{message_index}", 
+            use_container_width=True,
+            disabled=button_disabled,
+            help=button_help
+        ):
+            # Set processing state immediately
+            st.session_state[processing_key] = True
+            # Batch all operations
+            save_preference_smooth(message_index, right_model, left_model)
+
+def save_preference_smooth(message_index, preferred_model, other_model):
+    """Smooth preference save with optimized state management."""
+    try:
+        user_id = get_user_id()
+        chat_history = st.session_state.messages[:message_index + 1] if 'messages' in st.session_state else []
+        response_times = get_response_times(message_index)
+        
+        # Update UI state first for immediate feedback
+        preferred_display = get_model_display_name(preferred_model)
+        
+        # Update chat history immediately
+        if message_index < len(st.session_state.messages):
+            message = st.session_state.messages[message_index]
+            if message["role"] == "assistant":
+                left_model, right_model = message.get("model_order", (None, None))
+                left_response = message.get("left_response", "")
+                right_response = message.get("right_response", "")
+                
+                # Keep only the preferred response
+                preferred_response = left_response if preferred_model == left_model else right_response
+                
+                # Update the message to show only preferred response
+                st.session_state.messages[message_index] = {
+                    "role": "assistant",
+                    "content": preferred_response,
+                    "model": preferred_model,
+                    "was_comparison": True,
+                    "other_model": other_model
+                }
+        
+        # Set reveal state
+        st.session_state[f'revealed_{message_index}'] = {
+            'preferred': preferred_model,
+            'other': other_model,
+            'show_only_preferred': True
+        }
+        
+        # Clear processing state
+        processing_key = f'processing_{message_index}'
+        st.session_state[processing_key] = False
+        
+        # Show success toast
+        st.toast(f"#####  You liked {preferred_display}!", icon=":material/sentiment_very_satisfied:", duration="long")
+        
+        # Save to database in background (non-blocking)
+        save_preference_feedback(
+            message_index=message_index,
+            preferred_model=preferred_model,
+            other_model=other_model,
+            chat_history=chat_history,
+            user_id=user_id,
+            response_times=response_times
+        )
+        
+        # Rerun to show updated UI
+        st.rerun()
+        
+    except Exception as e:
+        # Clear processing state on error
+        processing_key = f'processing_{message_index}'
+        st.session_state[processing_key] = False
+        st.toast(f"Error saving preference: {e}", icon=":material/error:")
+        st.rerun()
 
 def reveal_models(message_index, preferred_model, other_model):
     """Reveal which models were which after preference is chosen."""
@@ -472,6 +615,14 @@ if not user_first_interaction and not has_message_history:
         "&nbsp;:small[:gray[:material/balance: Disclaimer]]",type="tertiary",on_click=show_disclaimer_dialog,
     )
     
+    # Add disclaimer banner at the very bottom of start page
+    st.markdown("---")
+    st.markdown("""
+<div style="text-align: center; padding: 10px; background-color: #f7f7f8; border-radius: 8px; margin: 10px 0;">
+    <small style="color: #6b7280;">JereChat can make mistakes. Consider checking important information.</small>
+</div>
+""", unsafe_allow_html=True)
+    
     st.stop()
 
 # Show chat input at the bottom when a question has been asked.
@@ -558,3 +709,11 @@ if user_message:
     
     # Show preference buttons
     show_preference_buttons(len(st.session_state.messages) - 1, left_model, right_model)
+
+# Add disclaimer banner at the very bottom
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; padding: 10px; background-color: #f7f7f8; border-radius: 8px; margin: 10px 0;">
+    <small style="color: #6b7280;">JereChat can make mistakes. Consider checking important information.</small>
+</div>
+""", unsafe_allow_html=True)
