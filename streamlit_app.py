@@ -64,7 +64,7 @@ def check_invitation_code():
         # Show invitation code entry form in main area
         st.markdown("## :material/lock_person: Enter Invitation Code")
         st.warning("We are sorry, but JereChat is not completely open right now.\
-            You can get access only by invitation codes. Check the sidebar for a free invitation code.", icon=":material/lock:")
+            You can get access only by invitation codes.", icon=":material/lock:")
         
         with st.form("invitation_form"):
             col1, col2, col3 = st.columns([1, 1, 1])
@@ -94,7 +94,7 @@ def check_invitation_code():
         
         with st.sidebar:
             st.markdown("## Don't have an invitation code?")
-            st.info("Please contact the administrator to obtain an invitation code.")
+            st.info("Please contact Jeremy to obtain an invitation code.")
         
         # Prevent the rest of the app from running
         st.stop()
