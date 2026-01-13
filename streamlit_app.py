@@ -411,7 +411,7 @@ def show_preference_buttons(message_index, left_model, right_model):
         button_help = "Processing..." if is_processing else ""
         
         if st.button(
-            f"left is better", 
+            f":material/arrow_back: Left is better", 
             key=f"prefer-left-{message_index}", 
             use_container_width=True,
             disabled=button_disabled,
@@ -428,7 +428,7 @@ def show_preference_buttons(message_index, left_model, right_model):
         button_help = "Processing..." if is_processing else ""
         
         if st.button(
-            f"right is better", 
+            f"Right is better :material/arrow_forward:", 
             key=f"prefer-right-{message_index}", 
             use_container_width=True,
             disabled=button_disabled,
