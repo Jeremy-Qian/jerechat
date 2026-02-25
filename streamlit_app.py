@@ -1,4 +1,5 @@
 import datetime
+import re
 import time
 from typing import Any, Dict, List, Optional
 
@@ -310,6 +311,16 @@ def get_response(prompt, model_version):
             response_text = rampion2_model.generate_response(
                 searcher, voc, normalized_prompt
             )
+            # If bad words in the response text, remove
+            # Get list of bad words from secrets
+            bad_words = st.secrets.get("bad_words", [])
+            # Replace each bad word with asterisks
+            for word in bad_words:
+                if word.lower() in response_text.lower():
+                    # Create a regex pattern that matches the word with any capitalization
+                    pattern = re.compile(re.escape(word), re.IGNORECASE)
+                    # Replace with asterisks of same length
+                    response_text = pattern.sub("*", response_text)
         else:
             # Fallback - this should not be called with current logic
             return None, None
