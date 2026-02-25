@@ -441,6 +441,7 @@ def render_history_message(index: int, message: Dict[str, Any]) -> None:
 
 
 # ORIGINAL FEEDBACK CONTROLS (commented out, kept for reference)
+# DO NOT DELETE THIS.
 # def show_feedback_controls(message_index):
 #     """Shows the "How did I do?" control."""
 #     st.write("")
