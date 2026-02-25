@@ -13,6 +13,7 @@ from constants import (
     MODEL_17PRO_DISPLAY,
     MODEL_RAMPION2,
     MODEL_RAMPION2_DISPLAY,
+    PRO17_CHECKPOINT_PATH,
     SUGGESTIONS,
 )
 from database import (
@@ -290,11 +291,30 @@ def get_response(prompt, model_version):
             response_text = rampion2_model.generate_response(
                 searcher, voc, normalized_prompt
             )
+        elif model_version == MODEL_17PRO:
+            # NEW: Load 1.7 Pro using 4000_checkpoint.tar
+            checkpoint_path = st.secrets.get(
+                "pro17_checkpoint_path", PRO17_CHECKPOINT_PATH
+            )
+
+            if "pro17_model" not in st.session_state:
+                with st.spinner("Loading JereChat 1.7 Pro..."):
+                    searcher, voc = rampion2_model.load_model(checkpoint_path)
+                    if searcher and voc:
+                        st.session_state.pro17_model = (searcher, voc)
+                    else:
+                        return None, None
+
+            searcher, voc = st.session_state.pro17_model
+            normalized_prompt = rampion2_model.normalizeString(prompt)
+            response_text = rampion2_model.generate_response(
+                searcher, voc, normalized_prompt
+            )
         else:
-            response_text = jc.generate_response(prompt, "1.5")
+            # Fallback - this should not be called with current logic
+            return None, None
 
         response_time = time.time() - start_time
-
         response_text = response_text.replace("||", "  \n\n")
         return response_text, response_time
     except Exception as e:

@@ -1,7 +1,7 @@
 """Shared constants for JereChat."""
 
 # Model identifiers (for internal use, database queries)
-MODEL_17PRO = "1.5pro"
+MODEL_17PRO = "1.7pro"
 MODEL_RAMPION2 = "rampion2"
 
 # Display names (for UI presentation)

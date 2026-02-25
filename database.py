@@ -55,7 +55,7 @@ def _init_supabase() -> Optional[Client]:
 #         chat_history: Optional list of chat messages for context
 #         user_id: User identifier (defaults to "anonymous")
 #         details: Optional additional feedback details
-#         model_version: Model version that generated the response ("1.5pro" or "rampion2")
+#         model_version: Model version that generated the response ("1.7pro" or "rampion2")
 #         response_time: Time taken to generate response in seconds
 #
 #     Returns:
@@ -135,7 +135,7 @@ def save_preference_feedback(
 
     Args:
         message_index: Index of the message being reviewed
-        preferred_model: Model version user preferred ("1.5pro" or "rampion2")
+        preferred_model: Model version user preferred ("1.7pro" or "rampion2")
         other_model: The other model version
         chat_history: Optional list of chat messages for context
         user_id: User identifier (defaults to "anonymous")
@@ -216,7 +216,7 @@ def get_model_feedback_stats(model_version: str) -> Dict[str, int]:
     Get feedback statistics for a specific model version.
 
     Args:
-        model_version: Model version to filter by ("1.5pro" or "rampion2")
+        model_version: Model version to filter by ("1.7pro" or "rampion2")
 
     Returns:
         Dictionary with 'good' and 'bad' feedback counts for the specified model

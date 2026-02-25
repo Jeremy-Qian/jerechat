@@ -253,7 +253,7 @@ streamlit run streamlit_app.py
 
 ### A/B Testing How It Works
 
-1. **Random Assignment**: Each new user is randomly assigned to either "1.5pro" or "rampion2" model
+1. **Random Assignment**: Each new user is randomly assigned to either "1.7pro" or "rampion2" model
 2. **Session Persistence**: Assignment persists for the user's session
 3. **Manual Override**: Use `ab_testing.set_model_version()` for testing
 4. **Feedback Tracking**: All feedback includes model version and response time
@@ -272,8 +272,8 @@ Access the A/B Test Dashboard in the sidebar to see:
 - Verify checkpoint file exists and is readable
 - Check PyTorch installation: `python -c "import torch; print(torch.__version__)"`
 
-#### Fallback to 1.5pro
-- If Rampion 2 fails to load, app automatically falls back to 1.5pro
+#### Fallback to 1.7pro
+- If Rampion 2 fails to load, app automatically falls back to 1.7pro
 - Check browser console for error messages
 - Verify model checkpoint compatibility
 
@@ -300,7 +300,7 @@ print(f"Assigned to: {version}")
 #### Test Both Models
 ```python
 from jerechat import ab_testing
-ab_testing.set_model_version("1.5pro")  # Test 1.5pro
+ab_testing.set_model_version("1.7pro")  # Test 1.7pro
 ab_testing.set_model_version("rampion2")  # Test Rampion 2
 ```
 
