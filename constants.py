@@ -1,15 +1,17 @@
 """Shared constants for JereChat."""
 
 # Model identifiers (for internal use, database queries)
-MODEL_15PRO = "1.5pro"
+MODEL_17PRO = "1.7pro"
 MODEL_RAMPION2 = "rampion2"
 
 # Display names (for UI presentation)
-MODEL_15PRO_DISPLAY = "JereChat 1.5 Pro"
+MODEL_17PRO_DISPLAY = "JereChat 1.7 Pro"
 MODEL_RAMPION2_DISPLAY = "JereChat R2"
 
 # Rampion 2 model checkpoint path
 DEFAULT_CHECKPOINT_PATH = "data/save/cb_model/corpus/2-2_500/2000_checkpoint.tar"
+# Update or add this constant:
+PRO17_CHECKPOINT_PATH = "data/save/cb_model/corpus/2-2_500/4000_checkpoint.tar"
 
 # Token constants for Rampion 2 model
 PAD_TOKEN = 0

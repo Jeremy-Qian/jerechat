@@ -1,12 +1,14 @@
-from typing import Any, Dict, List, Optional
 import datetime
+from typing import Any, Dict, List, Optional
 
 import streamlit as st
 from supabase import Client, create_client
-from constants import MODEL_15PRO, MODEL_RAMPION2
+
+from constants import MODEL_17PRO, MODEL_RAMPION2
 
 # Initialize Supabase client with error handling
 supabase: Optional[Client] = None
+
 
 def _init_supabase() -> Optional[Client]:
     """Initialize and return Supabase client, or None if configuration is missing."""
@@ -33,6 +35,7 @@ def _init_supabase() -> Optional[Client]:
         )
         return None
 
+
 # ORIGINAL SAVE_FEEDBACK (commented out, kept for reference)
 # def save_feedback(
 #     message_index: int,
@@ -52,7 +55,7 @@ def _init_supabase() -> Optional[Client]:
 #         chat_history: Optional list of chat messages for context
 #         user_id: User identifier (defaults to "anonymous")
 #         details: Optional additional feedback details
-#         model_version: Model version that generated the response ("1.5pro" or "rampion2")
+#         model_version: Model version that generated the response ("1.7pro" or "rampion2")
 #         response_time: Time taken to generate response in seconds
 #
 #     Returns:
@@ -77,6 +80,7 @@ def _init_supabase() -> Optional[Client]:
 #     except Exception as e:
 #         st.error(f"Failed to save feedback: {e}")
 #         return None
+
 
 def save_original_feedback(
     message_index: int,
@@ -116,6 +120,7 @@ def save_original_feedback(
         st.error(f"Failed to save original feedback: {e}")
         return None
 
+
 def save_preference_feedback(
     message_index: int,
     preferred_model: str,
@@ -130,7 +135,7 @@ def save_preference_feedback(
 
     Args:
         message_index: Index of the message being reviewed
-        preferred_model: Model version user preferred ("1.5pro" or "rampion2")
+        preferred_model: Model version user preferred ("1.7pro" or "rampion2")
         other_model: The other model version
         chat_history: Optional list of chat messages for context
         user_id: User identifier (defaults to "anonymous")
@@ -153,7 +158,9 @@ def save_preference_feedback(
             "user_id": user_id,
             "details": details,
             "model_version": preferred_model,
-            "response_time": response_times.get(preferred_model) if response_times else None,
+            "response_time": response_times.get(preferred_model)
+            if response_times
+            else None,
         }
         client.table("feedback").insert(preferred_data).execute()
 
@@ -165,13 +172,16 @@ def save_preference_feedback(
             "user_id": user_id,
             "details": details,
             "model_version": other_model,
-            "response_time": response_times.get(other_model) if response_times else None,
+            "response_time": response_times.get(other_model)
+            if response_times
+            else None,
         }
         result = client.table("feedback").insert(other_data).execute()
         return result.data
     except Exception as e:
         st.error(f"Failed to save preference feedback: {e}")
         return None
+
 
 def get_feedback_stats() -> Dict[str, int]:
     """
@@ -200,12 +210,13 @@ def get_feedback_stats() -> Dict[str, int]:
         st.error(f"Failed to get feedback stats: {e}")
         return {"good": 0, "bad": 0}
 
+
 def get_model_feedback_stats(model_version: str) -> Dict[str, int]:
     """
     Get feedback statistics for a specific model version.
 
     Args:
-        model_version: Model version to filter by ("1.5pro" or "rampion2")
+        model_version: Model version to filter by ("1.7pro" or "rampion2")
 
     Returns:
         Dictionary with 'good' and 'bad' feedback counts for the specified model
@@ -238,6 +249,7 @@ def get_model_feedback_stats(model_version: str) -> Dict[str, int]:
         st.error(f"Failed to get model feedback stats: {e}")
         return {"good": 0, "bad": 0}
 
+
 def get_ab_test_results() -> Dict[str, Dict[str, int]]:
     """
     Get A/B test results comparing both model versions.
@@ -246,9 +258,10 @@ def get_ab_test_results() -> Dict[str, Dict[str, int]]:
         Dictionary with feedback stats for each model version
     """
     return {
-        MODEL_15PRO: get_model_feedback_stats(MODEL_15PRO),
+        MODEL_17PRO: get_model_feedback_stats(MODEL_17PRO),
         MODEL_RAMPION2: get_model_feedback_stats(MODEL_RAMPION2),
     }
+
 
 def get_response_time_stats(model_version: Optional[str] = None) -> Dict[str, float]:
     """
@@ -265,20 +278,28 @@ def get_response_time_stats(model_version: Optional[str] = None) -> Dict[str, fl
         return {"avg": 0.0, "min": 0.0, "max": 0.0}
 
     try:
-        query = client.table("feedback").select("response_time").not_.is_("response_time", "null")
+        query = (
+            client.table("feedback")
+            .select("response_time")
+            .not_.is_("response_time", "null")
+        )
         if model_version:
             query = query.eq("model_version", model_version)
-        
+
         result = query.execute()
-        
+
         if not result.data:
             return {"avg": 0.0, "min": 0.0, "max": 0.0}
-        
-        response_times = [row["response_time"] for row in result.data if row["response_time"] is not None]
-        
+
+        response_times = [
+            row["response_time"]
+            for row in result.data
+            if row["response_time"] is not None
+        ]
+
         if not response_times:
             return {"avg": 0.0, "min": 0.0, "max": 0.0}
-        
+
         return {
             "avg": sum(response_times) / len(response_times),
             "min": min(response_times),
@@ -288,5 +309,13 @@ def get_response_time_stats(model_version: Optional[str] = None) -> Dict[str, fl
         st.error(f"Failed to get response time stats: {e}")
         return {"avg": 0.0, "min": 0.0, "max": 0.0}
 
+
 # Explicitly export functions for clarity (exclude deprecated save_feedback)
-__all__ = ['get_feedback_stats', 'get_model_feedback_stats', 'get_ab_test_results', 'get_response_time_stats', 'save_original_feedback', 'save_preference_feedback']
+__all__ = [
+    "get_feedback_stats",
+    "get_model_feedback_stats",
+    "get_ab_test_results",
+    "get_response_time_stats",
+    "save_original_feedback",
+    "save_preference_feedback",
+]
