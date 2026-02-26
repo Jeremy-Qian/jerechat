@@ -244,19 +244,6 @@ with st.sidebar:
                     f"{MODEL_RAMPION2_DISPLAY} Preference Rate", f"{rate_r2:.1f}%"
                 )
 
-            st.markdown("---")
-            st.markdown("### Response Times")
-            r2_times = get_response_time_stats(MODEL_RAMPION2)
-            pro_times = get_response_time_stats(MODEL_17PRO)
-
-            col3, col4 = st.columns(2)
-            with col3:
-                st.markdown(f"#### {MODEL_17PRO_DISPLAY}")
-                st.metric("Avg", f"{pro_times['avg']:.3f}s")
-
-            with col4:
-                st.markdown(f"#### {MODEL_RAMPION2_DISPLAY}")
-                st.metric("Avg", f"{r2_times['avg']:.3f}s")
         except Exception as e:
             st.warning(f"Could not load stats: {e}")
 
