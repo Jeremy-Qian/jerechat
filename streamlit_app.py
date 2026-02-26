@@ -683,7 +683,9 @@ def show_disclaimer_dialog():
 # Draw the UI
 
 st.badge(""":material/science: Experimental""")
-
+st.warning(
+    """**SPECIAL NOTICE**: We have added a new model, JereChat 1.7 Pro, that may generate inappropriate content. Those are removed by a "*". Please use with caution."""
+)
 title_row = st.container(
     horizontal=True,
     vertical_alignment="bottom",
