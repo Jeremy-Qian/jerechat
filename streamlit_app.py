@@ -70,7 +70,7 @@ st.markdown(
 )
 
 # Inject Umami analytics tracking script into header
-components.html(
+st.iframe(
     """
     <script defer src="https://cloud.umami.is/script.js" data-website-id="f401341a-02f5-49e7-a16a-145dd36cec93"></script>
     """,
